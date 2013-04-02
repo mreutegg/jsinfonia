@@ -1,0 +1,15 @@
+- Lazy initialize data in Item to safe memory
+
+- Run SinfoniaHashMap test with lots of entries and file based memory node
+
+- implement more basic data structures like List, Set, etc.
+
+- how is a DataItem initialized? initial revision, type... (some kind of alloc?)
+
+Major topics:
+
+- Replication / primary-backup implementation for MemoryNodes
+
+- Replicated versions of Items (->Sinfonia paper)
+
+- BTree implementation 
