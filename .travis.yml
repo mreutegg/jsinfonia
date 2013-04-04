@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-script: mvn verify -PintegrationTesting
+script: mvn verify
 language: java
 jdk:
   - openjdk6
