@@ -24,7 +24,7 @@ before_install:
   - "tar zxf thrift-0.9.0.tar.gz"
   - "cd thrift-0.9.0"
   - "chmod +x ./configure"
-  - "./configure --disable-gen-erl --disable-gen-hs --without-ruby --without-haskell --without-erlang"
+  - "./configure --disable-gen-erl --disable-gen-hs --without-ruby --without-haskell --without-erlang --without-python --without-c_glib --without-cpp"
   - "sudo make install"
   - "cd .."
 notifications:
