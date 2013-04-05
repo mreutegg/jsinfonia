@@ -21,9 +21,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.people.mreutegg.jsinfonia.thrift.ApplicationNodeService.Client;
+import org.apache.people.mreutegg.jsinfonia.thrift.TItem;
 import org.apache.people.mreutegg.jsinfonia.thrift.TMemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.thrift.TResponse;
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
+import org.apache.people.mreutegg.jsinfonia.Item;
+import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.MemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.MiniTransaction;
 import org.apache.people.mreutegg.jsinfonia.Response;
@@ -83,6 +86,19 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
 					return client.executeTransaction(Utils.convert(tx));
 				}
 			});
+			if (response.isSetReadItems()) {
+				Map<ItemReference, Item> readItems = new HashMap<ItemReference, Item>();
+				for (Item item : tx.getReadItems()) {
+					readItems.put(item.getReference(), item);
+				}
+				for (TItem item : response.getReadItems()) {
+					ItemReference r = Utils.convert(item.getReference());
+					Item readItem = readItems.get(r);
+					if (readItem != null) {
+						readItem.getData().put(item.bufferForData());
+					}
+				}
+			}
 			return Utils.convert(response);
 		} catch (TException e) {
 			throw new RuntimeException(e);

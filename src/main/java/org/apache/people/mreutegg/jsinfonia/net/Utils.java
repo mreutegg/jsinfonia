@@ -166,4 +166,9 @@ public class Utils {
 			return Response.failure(failedCompares);
 		}
 	}
+
+	public static ItemReference convert(TItemReference reference) {
+		return new ItemReference(reference.getMemoryNodeId(),
+				reference.getAddress());
+	}
 }
