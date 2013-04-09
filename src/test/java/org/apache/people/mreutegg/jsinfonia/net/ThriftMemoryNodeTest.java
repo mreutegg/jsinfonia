@@ -39,26 +39,12 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 
     @Test
 	public void testSinfoniaThrift() throws Exception {
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 1, true);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 1, false);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 2, true);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 2, false);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 4, true);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 4, false);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 8, true);
-    	//testSinfoniaThrift(1, 1 * 1024, 1024, 1024, 8, false);
-    	//testSinfoniaThrift(1, 1 * 1024 * 1024, 1024, 1024, 1);
-    	testSinfoniaThrift(2, 1 * 1024 * 1024, 1024, 1024, 2, true);
-    	//testSinfoniaThrift(4, 1 * 1024 * 1024, 1024, 1024, 4);
-    	//testSinfoniaThrift(8, 1 * 1024 * 1024, 1024, 1024, 8);
+    	testSinfoniaThrift(4, 64 * 1024, 1024, 1024, 4, true);
     }
     
     @Test
     public void testApplicationNodeThrift() throws Exception {
-    	testApplicationNodeThrift(1, 1 * 1024, 1024, 1024, 1, true);
-    	//testApplicationNodeThrift(2, 1 * 1024, 1024, 1024, 2, true);
-    	//testApplicationNodeThrift(4, 1 * 1024, 1024, 1024, 4, true);
-    	//testApplicationNodeThrift(8, 1 * 1024, 1024, 1024, 8, true);
+    	testApplicationNodeThrift(4, 64 * 1024, 1024, 1024, 4, true);
     }
     
     private void testSinfoniaThrift(
@@ -94,7 +80,7 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 	        testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
         	Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
-	        for (int i = 0; i < numMemoryNodes; i++) {
+	        for (int i = 0; i < directory.getMemoryNodeIds().size(); i++) {
 	        	final MemoryNodeClient client = directory.getMemoryNode(i); 
 	        	closes.add(new Callable<Void>() {
 					@Override
@@ -103,14 +89,6 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 	                    return null;
                     }
 	        	});
-	        	final MemoryNodeServer server = servers.get(i);
-	        	closes.add(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						server.stop();
-						return null;
-					}
-				});
 	        	final FileMemoryNode fmn = memoryNodes.get(i);
 	        	closes.add(new Callable<Void>() {
 					@Override
@@ -120,6 +98,15 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
                     }
 	        	});
 	        }
+        	for (final MemoryNodeServer server : servers) {
+            	closes.add(new Callable<Void>() {
+    				@Override
+    				public Void call() throws Exception {
+    					server.stop();
+    					return null;
+    				}
+    			});
+        	}
         	executor.invokeAll(closes);
         	executor.shutdownNow();
 	        delete(testDir);

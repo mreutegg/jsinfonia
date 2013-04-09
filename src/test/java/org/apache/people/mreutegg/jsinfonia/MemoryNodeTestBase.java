@@ -148,6 +148,15 @@ public abstract class MemoryNodeTestBase {
         for (int i = 0; files != null && i < files.length; i++) {
             delete(files[i]);
         }
-        file.delete();
+        for (int i = 0; i < 10; i++) {
+            if (file.delete()) {
+            	return;
+            } else {
+            	// file may be memory mapped and can only
+            	// be deleted when the MappedByteBuffer is
+            	// garbage collected. Try some GC cycles.
+            	System.gc();
+            }
+        }
     }
 }
