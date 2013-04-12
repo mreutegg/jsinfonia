@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.channels.ReadableByteChannel;
 
@@ -35,8 +36,8 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(FileMemoryNode.class);
 	
 	private final RandomAccessFile file;
-	
-	private final MappedByteBuffer mappedBuffer;
+		
+	private MappedByteBuffer mappedBuffer;
 	
 	private final RollingRedoLog redoLog;
 	
@@ -53,7 +54,8 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
 	    if (this.file.length() < ((long) addressSpace) * ((long) itemSize)) {
 	    	this.file.setLength(((long) addressSpace) * ((long) itemSize));
 	    }
-	    this.mappedBuffer = this.file.getChannel().map(MapMode.READ_WRITE, 0, file.length());
+	    FileChannel channel = this.file.getChannel();
+	    this.mappedBuffer = channel.map(MapMode.READ_WRITE, 0, file.length());
 	    this.itemBuffer = new ItemBuffer(this, bufferSize, itemSize);
 	    this.redoLog = new RollingRedoLog(this, new File(file.getAbsoluteFile() + ".log"));
     }
@@ -91,6 +93,7 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
 		this.redoLog.close();
 		this.itemBuffer.close();
 		this.file.close();
+		this.mappedBuffer = null;
     }
 	
 	//------------------------< FileMemoryNode >-------------------------------
@@ -113,5 +116,4 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
     	time = System.currentTimeMillis() - time;
     	log.info("sync time: {} ms.", time);
     }
-
 }

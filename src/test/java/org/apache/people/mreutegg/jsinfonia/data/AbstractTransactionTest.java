@@ -29,6 +29,7 @@ import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeDirectory;
 import org.apache.people.mreutegg.jsinfonia.data.DataItemCache;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
 import org.apache.people.mreutegg.jsinfonia.fs.FileMemoryNode;
+import org.apache.people.mreutegg.jsinfonia.mem.InMemoryMemoryNode;
 
 
 import junit.framework.TestCase;
@@ -76,25 +77,10 @@ public abstract class AbstractTransactionTest extends TestCase {
 	
 	protected final MemoryNodeDirectory<? extends MemoryNode> createDirectory(
 			int numNodes, int addressSpace, int itemSize, int bufferSize) throws IOException {
-		SimpleMemoryNodeDirectory<FileMemoryNode> dir = new SimpleMemoryNodeDirectory<FileMemoryNode>();
+		SimpleMemoryNodeDirectory<MemoryNode> dir = new SimpleMemoryNodeDirectory<MemoryNode>();
 		for (int i = 0; i < numNodes; i++) {
-			File memoryNodeDir = new File(testDir, "" + i);
-        	if (!memoryNodeDir.mkdirs()) {
-        		fail("Unable to create memory node directory: " + memoryNodeDir.getAbsolutePath());
-        	}
-			final FileMemoryNode fmn = new FileMemoryNode(i,
-					new File(memoryNodeDir, "data"), addressSpace, itemSize, bufferSize);
-			shutdownHooks.add(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						fmn.close();
-					} catch (IOException e) {
-						// ignore
-					}
-				}
-			});
-			dir.addMemoryNode(fmn);
+			MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+			dir.addMemoryNode(mn);
 		}
 		return dir;
 	}

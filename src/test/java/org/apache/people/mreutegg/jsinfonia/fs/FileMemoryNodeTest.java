@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.people.mreutegg.jsinfonia.MemoryNodeTestBase;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeDirectory;
@@ -32,13 +33,7 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
 
     @Test
 	public void testSinfoniaFile() throws Exception {
-    	testSinfoniaFile(1, 1 * 1024, 1024, 1024, 1);
-//    	testSinfoniaFile(1, 1 * 1024 * 1024, 1024, 1024, 1);
-//    	testSinfoniaFile(2, 1 * 1024 * 1024, 1024, 1024, 2);
-//    	testSinfoniaFile(4, 1 * 1024 * 1024, 1024, 1024, 4);
-//    	testSinfoniaFile(8, 1 * 1024 * 1024, 1024, 1024, 8);
-//    	testSinfoniaFile(16, 1 * 1024 * 1024, 1024, 1024, 16);
-//    	testSinfoniaFile(1, 1 * 1024 * 1024, 1024, 1024, 32);
+    	testSinfoniaFile(1, 16 * 1024, 1024, 1024, 256);
     }
     
     private void testSinfoniaFile(
@@ -46,12 +41,12 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
     		final int addressSpace,
     		final int itemSize,
     		final int bufferSize,
-    		final int numThreads) throws Exception {
+    		int numThreads) throws Exception {
     	File testDir = new File(new File("target"), "memoryNodes");
     	if (testDir.exists()) {
     		delete(testDir);
     	}
-        final SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<FileMemoryNode>();
+        SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<FileMemoryNode>();
     	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
     	try {
 	        for (int i = 0; i < numMemoryNodes; i++) {
@@ -61,10 +56,9 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
 	        	}
 	        	FileMemoryNode fmn = new FileMemoryNode(i, new File(memoryNodeDir, "data"), 
     					addressSpace, itemSize, bufferSize);
-	        	//fmn.sync();
 	        	directory.addMemoryNode(fmn);
 	        }
-	        testSinfonia(directory, addressSpace, itemSize, numThreads);
+			testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
         	Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
 	        for (int i = 0; i < numMemoryNodes; i++) {
@@ -78,7 +72,9 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
 	        	});
 	        }
         	executor.invokeAll(closes);
-        	executor.shutdownNow();
+        	executor.shutdown();
+        	executor.awaitTermination(60, TimeUnit.SECONDS);
+        	directory = null;
 	        delete(testDir);
         }
     }

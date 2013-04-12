@@ -148,7 +148,7 @@ public abstract class MemoryNodeTestBase {
         for (int i = 0; files != null && i < files.length; i++) {
             delete(files[i]);
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             if (file.delete()) {
             	return;
             } else {
@@ -158,5 +158,6 @@ public abstract class MemoryNodeTestBase {
             	System.gc();
             }
         }
+        throw new RuntimeException("Cannot delete file: " + file.getAbsolutePath());
     }
 }

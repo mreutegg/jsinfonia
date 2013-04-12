@@ -36,11 +36,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.people.mreutegg.jsinfonia.Item;
 import org.apache.people.mreutegg.jsinfonia.RedoLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.SettableFuture;
 
 
 public class FileRedoLog implements RedoLog, Closeable {
@@ -63,7 +71,14 @@ public class FileRedoLog implements RedoLog, Closeable {
 	
 	private final FileChannel readChannel;
 	
-	private long lastSyncTime = 0;
+	private final AtomicBoolean shutdown = new AtomicBoolean(false);
+	
+	private final BlockingQueue<SettableFuture<Boolean>> syncQueue 
+						= new LinkedBlockingQueue<SettableFuture<Boolean>>();
+	
+	private final Thread syncThread;
+	
+	private long syncCount = 0;
 	
 	// transactions in log. maps transactionID to offset in file
 	private final Map<String, TxInfo> loggedTransactions = Collections.synchronizedMap(new HashMap<String, TxInfo>());  
@@ -78,6 +93,40 @@ public class FileRedoLog implements RedoLog, Closeable {
 		this.readFile = new RandomAccessFile(file, "r");
 		this.readChannel = readFile.getChannel();
 		runRecovery();
+		this.syncThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				List<SettableFuture<Boolean>> futures = Lists.newArrayList();
+				while (!shutdown.get()) {
+					futures.clear();
+					try {
+						syncQueue.drainTo(futures);
+						if (futures.isEmpty()) {
+							SettableFuture<Boolean> f = syncQueue.poll(100, TimeUnit.MILLISECONDS);
+							if (f != null) {
+								futures.add(f);
+							}
+						}
+						if (!futures.isEmpty()) {
+							try {
+								syncCount++;
+								FileRedoLog.this.file.getChannel().force(false);
+								for (SettableFuture<Boolean> f : futures) {
+									f.set(true);
+								}
+							} catch (IOException e) {
+								for (SettableFuture<Boolean> f : futures) {
+									f.setException(e);
+								}
+							}
+						}
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
+			}
+		});
+		this.syncThread.start();
 	}
 	
 	@Override
@@ -128,12 +177,6 @@ public class FileRedoLog implements RedoLog, Closeable {
 						}
 					}
 				}
-				// TODO sync?
-				if (lastSyncTime + 1000 < System.currentTimeMillis()) {
-					file.getChannel().force(false);
-					lastSyncTime = System.currentTimeMillis();
-				}
-				loggedTransactions.put(txId, txInfo);
 			} catch (IOException e) {
 				try {
 					// try to truncate
@@ -142,6 +185,26 @@ public class FileRedoLog implements RedoLog, Closeable {
 					log.warn("Unable to truncate redo log", ex);
 				}
 				throw e;
+			}
+		}
+		loggedTransactions.put(txId, txInfo);
+		SettableFuture<Boolean> f = SettableFuture.create();
+		syncQueue.add(f);
+		try {
+			for (;;) {
+				try {
+					f.get();
+					break;
+				} catch (InterruptedException e) {
+					Thread.interrupted();
+				}
+			}
+		} catch (ExecutionException e) {
+			log.warn("Unable to sync redo log", e.getCause());
+			if (e.getCause() instanceof IOException) {
+				throw (IOException) e.getCause();
+			} else {
+				throw new IOException(e.getCause());
 			}
 		}
 	}
@@ -192,8 +255,15 @@ public class FileRedoLog implements RedoLog, Closeable {
 	@Override
     public void close() throws IOException {
 		checkpoint();
+		shutdown.set(true);
+		try {
+			syncThread.join();
+		} catch (InterruptedException e) {
+			// ignore
+		}
 		file.close();
 		readFile.close();
+		log.info("Sync count: {}", syncCount);
     }
 
 	

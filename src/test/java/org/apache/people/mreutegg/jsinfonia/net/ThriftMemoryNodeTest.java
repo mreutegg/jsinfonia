@@ -15,36 +15,43 @@
  */
 package org.apache.people.mreutegg.jsinfonia.net;
 
-import java.io.File;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
+import org.apache.people.mreutegg.jsinfonia.MemoryNode;
 import org.apache.people.mreutegg.jsinfonia.MemoryNodeTestBase;
 import org.apache.people.mreutegg.jsinfonia.SimpleApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeDirectory;
-import org.apache.people.mreutegg.jsinfonia.fs.FileMemoryNode;
+import org.apache.people.mreutegg.jsinfonia.mem.InMemoryMemoryNode;
 import org.apache.people.mreutegg.jsinfonia.net.ApplicationNodeClient;
 import org.apache.people.mreutegg.jsinfonia.net.ApplicationNodeServer;
 import org.apache.people.mreutegg.jsinfonia.net.MemoryNodeClient;
 import org.apache.people.mreutegg.jsinfonia.net.MemoryNodeServer;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 
     @Test
 	public void testSinfoniaThrift() throws Exception {
-    	testSinfoniaThrift(4, 64 * 1024, 1024, 1024, 4, true);
+    	int addressSpace = 64 * 1024;
+    	int numMemoryNodes = 2;
+    	for (int i = 0; i < 3; i++) {
+    		testSinfoniaThrift(numMemoryNodes, addressSpace / numMemoryNodes,
+    				1024, 1024, numMemoryNodes, true);
+    		numMemoryNodes *= 2;
+    	}
     }
     
     @Test
     public void testApplicationNodeThrift() throws Exception {
-    	testApplicationNodeThrift(4, 64 * 1024, 1024, 1024, 4, true);
+    	testApplicationNodeThrift(4, 16 * 1024, 1024, 1024, 4, true);
     }
     
     private void testSinfoniaThrift(
@@ -54,25 +61,15 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
     		final int bufferSize,
     		final int numThreads,
     		final boolean nonBlocking) throws Exception {
-    	File testDir = new File(new File("target"), "memoryNodes");
-    	if (testDir.exists()) {
-    		delete(testDir);
-    	}
-    	final List<FileMemoryNode> memoryNodes = new ArrayList<FileMemoryNode>();
+    	final List<MemoryNode> memoryNodes = new ArrayList<MemoryNode>();
     	final List<MemoryNodeServer> servers = new ArrayList<MemoryNodeServer>();
         final SimpleMemoryNodeDirectory<MemoryNodeClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeClient>();
     	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
     	try {
 	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	File memoryNodeDir = new File(testDir, ""+ i);
-	        	if (!memoryNodeDir.mkdirs()) {
-	        		Assert.fail("Unable to create memory node directory: " + memoryNodeDir.getAbsolutePath());
-	        	}
-	        	FileMemoryNode fmn = new FileMemoryNode(i, new File(memoryNodeDir, "data"), 
-    					addressSpace, itemSize, bufferSize);
-	        	//fmn.sync();
-	        	memoryNodes.add(fmn);
-	        	MemoryNodeServer server = new MemoryNodeServer(fmn, 0, nonBlocking);
+	        	MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+	        	memoryNodes.add(mn);
+	        	MemoryNodeServer server = new MemoryNodeServer(mn, 0, nonBlocking);
 	        	server.start();
 	        	servers.add(server);
 	        	directory.addMemoryNode(new MemoryNodeClient("localhost", server.getPort(), numThreads, nonBlocking));
@@ -89,14 +86,6 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 	                    return null;
                     }
 	        	});
-	        	final FileMemoryNode fmn = memoryNodes.get(i);
-	        	closes.add(new Callable<Void>() {
-					@Override
-                    public Void call() throws Exception {
-						fmn.close();
-	                    return null;
-                    }
-	        	});
 	        }
         	for (final MemoryNodeServer server : servers) {
             	closes.add(new Callable<Void>() {
@@ -108,8 +97,8 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
     			});
         	}
         	executor.invokeAll(closes);
-        	executor.shutdownNow();
-	        delete(testDir);
+        	executor.shutdown();
+        	executor.awaitTermination(60, TimeUnit.SECONDS);
         }
     }
 
@@ -120,23 +109,13 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
     		final int bufferSize,
     		final int numThreads,
     		final boolean nonBlocking) throws Exception {
-    	File testDir = new File(new File("target"), "memoryNodes");
-    	if (testDir.exists()) {
-    		delete(testDir);
-    	}
-        final SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<FileMemoryNode>();
+        final SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
     	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
     	ApplicationNodeServer appNodeServer = null;
     	try {
 	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	File memoryNodeDir = new File(testDir, ""+ i);
-	        	if (!memoryNodeDir.mkdirs()) {
-	        		Assert.fail("Unable to create memory node directory: " + memoryNodeDir.getAbsolutePath());
-	        	}
-	        	FileMemoryNode fmn = new FileMemoryNode(i, new File(memoryNodeDir, "data"), 
-    					addressSpace, itemSize, bufferSize);
-	        	//fmn.sync();
-	        	directory.addMemoryNode(fmn);
+	        	MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+	        	directory.addMemoryNode(mn);
 	        }
 	        ApplicationNode appNode = new SimpleApplicationNode(directory, executor);
 	        appNodeServer = new ApplicationNodeServer(appNode, 0, nonBlocking);
@@ -157,18 +136,19 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
         		});
         	}
 	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	final FileMemoryNode fmn = directory.getMemoryNode(i); 
+	        	final MemoryNode mn = directory.getMemoryNode(i); 
 	        	closes.add(new Callable<Void>() {
 					@Override
                     public Void call() throws Exception {
-						fmn.close();
+						if (mn instanceof Closeable) {
+							((Closeable) mn).close();
+						}
 	                    return null;
                     }
 	        	});
 	        }
         	executor.invokeAll(closes);
         	executor.shutdownNow();
-	        delete(testDir);
         }
     }
 }
