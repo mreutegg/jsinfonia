@@ -18,6 +18,8 @@ package org.apache.people.mreutegg.jsinfonia;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
 
 public class ItemReference {
 
@@ -28,6 +30,18 @@ public class ItemReference {
 	public ItemReference(int memoryNodeId, int address) {
 		this.memoryNodeId = memoryNodeId;
 		this.address = address;
+	}
+	
+	public static ItemReference fromBuffer(ByteBuffer buffer) {
+		return new ItemReference(buffer.getInt(), buffer.getInt());
+	}
+	
+	public void toByteBuffer(ByteBuffer buffer) {
+		if (buffer.remaining() < 8) {
+			throw new BufferOverflowException();
+		}
+		buffer.putInt(memoryNodeId);
+		buffer.putInt(address);
 	}
 	
 	public int getMemoryNodeId() {

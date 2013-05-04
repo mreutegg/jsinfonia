@@ -270,7 +270,7 @@ public class SinfoniaBucketStore<K, V>
 				@Override
 				public BucketDirectory perform(ByteBuffer data) {
 					data.position(getDirectoryRefOffset() + index * 8);
-					ItemReference dirRef = new ItemReference(data.getInt(), data.getInt());
+					ItemReference dirRef = ItemReference.fromBuffer(data);
 					return new BucketDirectory(dirRef);
 				}
 			});
@@ -293,8 +293,7 @@ public class SinfoniaBucketStore<K, V>
 						data.putChar(HEADER_OFFSET_NUM_DIRS, (char) (i[0] + 1));
 						data.putChar(HEADER_OFFSET_DIR_SIZE + i[0] * 2, (char) 0);
 						data.position(dirRefOffset + i[0] * 8);
-						data.putInt(dirRef.getMemoryNodeId());
-						data.putInt(dirRef.getAddress());
+						dirRef.toByteBuffer(data);
 						return null;
 					}
 				});
@@ -458,7 +457,7 @@ public class SinfoniaBucketStore<K, V>
 				next = txContext.read(next, new DataOperation<ItemReference>() {
 					@Override
 					public ItemReference perform(ByteBuffer data) {
-						return new ItemReference(data.getInt(), data.getInt());
+						return ItemReference.fromBuffer(data);
 					}
 				});
 				if (next.getMemoryNodeId() == NO_NEXT_MARKER) {
@@ -507,7 +506,7 @@ public class SinfoniaBucketStore<K, V>
 				ref = txContext.read(ref, new DataOperation<ItemReference>() {
 					@Override
 					public ItemReference perform(ByteBuffer data) {
-						ItemReference next = new ItemReference(data.getInt(), data.getInt());
+						ItemReference next = ItemReference.fromBuffer(data);
 						for (Map.Entry<K, V> entry : reader.read(data.slice())) {
 							entries.put(entry.getKey(), entry.getValue());
 						}
@@ -526,7 +525,7 @@ public class SinfoniaBucketStore<K, V>
 				ref = txContext.write(ref, new DataOperation<ItemReference>() {
 					@Override
 					public ItemReference perform(ByteBuffer data) {
-						ItemReference next = new ItemReference(data.getInt(), data.getInt());
+						ItemReference next = ItemReference.fromBuffer(data);
 						start[0] += writer.write(entryList.subList(start[0], entryList.size()), data.slice());
 						if (start[0] < entryList.size()) {
 							// more items to write
