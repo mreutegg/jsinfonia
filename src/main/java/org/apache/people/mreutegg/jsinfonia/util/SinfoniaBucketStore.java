@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
@@ -93,13 +94,13 @@ public class SinfoniaBucketStore<K, V>
 	 */
 	private final ItemReference headerRef;
 	
-	private final BucketReader<K, V> reader;
-	private final BucketWriter<K, V> writer;
+	private final BucketReader<Entry<K, V>> reader;
+	private final BucketWriter<Entry<K, V>> writer;
 
 	private final List<Bucket<K, V>> buckets = new BucketList();
 	
 	public SinfoniaBucketStore(ItemManager itemMgr, TransactionContext txContext,
-			ItemReference headerRef, BucketReader<K, V> reader, BucketWriter<K, V> writer) {
+			ItemReference headerRef, BucketReader<Entry<K, V>> reader, BucketWriter<Entry<K, V>> writer) {
 		this.itemMgr = itemMgr;
 		this.txContext = txContext;
 		this.headerRef = headerRef;

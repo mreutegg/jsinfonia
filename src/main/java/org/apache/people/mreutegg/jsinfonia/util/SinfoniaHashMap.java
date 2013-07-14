@@ -29,12 +29,12 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
 	private final TransactionManager txManager;
 	private final ItemManagerFactory factory;
 	private final ItemReference headerRef;
-	private final BucketReader<K, V> reader;
-	private final BucketWriter<K, V> writer;
+	private final BucketReader<Entry<K, V>> reader;
+	private final BucketWriter<Entry<K, V>> writer;
 	
 	public SinfoniaHashMap(TransactionManager txManager, ItemManagerFactory factory,
-			ItemReference headerRef, BucketReader<K, V> reader,
-			BucketWriter<K, V> writer) {
+			ItemReference headerRef, BucketReader<Entry<K, V>> reader,
+			BucketWriter<Entry<K, V>> writer) {
 		this.txManager = txManager;
 		this.factory = factory;
 		this.headerRef = headerRef;

@@ -254,7 +254,7 @@ public class LinearHashMapTest extends TestCase {
 					}
 				},
 				headerRef,
-				new BucketReader<Integer, Integer>() {
+				new BucketReader<Entry<Integer, Integer>>() {
 					@Override
 					public Iterable<Entry<Integer, Integer>> read(
 							ByteBuffer data) {
@@ -266,7 +266,7 @@ public class LinearHashMapTest extends TestCase {
 						return entries.entrySet();
 					}
 				},
-				new BucketWriter<Integer, Integer>() {
+				new BucketWriter<Entry<Integer, Integer>>() {
 					@Override
 					public int write(Iterable<Entry<Integer, Integer>> entries,
 							ByteBuffer data) {

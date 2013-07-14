@@ -16,22 +16,19 @@
 package org.apache.people.mreutegg.jsinfonia.util;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 /**
- * A bucket reader for some key type <code>K</code> and value
- * type <code>V</code>.
+ * A bucket reader for some entry type <code>E</code>.
  *
- * @param <K> the key type.
- * @param <V> the value type.
+ * @param <E> the entry type.
  */
-public interface BucketReader<K, V> {
+public interface BucketReader<E> {
 
 	/**
-	 * Reads key/value entries from the given <code>ByteBuffer</code>.
+	 * Reads entries from the given <code>ByteBuffer</code>.
 	 * 
 	 * @param data the bucket data.
-	 * @return an <code>Iterable</code> over the key/value entries.
+	 * @return an <code>Iterable</code> over the entries.
 	 */
-	Iterable<Map.Entry<K, V>> read(ByteBuffer data);
+	Iterable<E> read(ByteBuffer data);
 }
