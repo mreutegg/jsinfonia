@@ -21,28 +21,28 @@ import java.util.Set;
 
 public class Response {
 
-	public static final Response SUCCESS = new Response(true, Collections.<ItemReference>emptyList());
-	
-	private final boolean success;
-	
-	private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
-	
-	private Response(boolean success, Iterable<ItemReference> failedCompares) {
-		this.success = success;
-		for (ItemReference ref : failedCompares) {
-			this.failedCompares.add(ref);
-		}
-	}
-	
-	public static Response failure(Iterable<ItemReference> failedCompares) {
-		return new Response(false, failedCompares);
-	}
-	
-	public boolean isSuccess() {
-		return success;
-	}
-	
-	public Iterable<ItemReference> getFailedCompares() {
-		return failedCompares;
-	}
+    public static final Response SUCCESS = new Response(true, Collections.<ItemReference>emptyList());
+
+    private final boolean success;
+
+    private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+
+    private Response(boolean success, Iterable<ItemReference> failedCompares) {
+        this.success = success;
+        for (ItemReference ref : failedCompares) {
+            this.failedCompares.add(ref);
+        }
+    }
+
+    public static Response failure(Iterable<ItemReference> failedCompares) {
+        return new Response(false, failedCompares);
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public Iterable<ItemReference> getFailedCompares() {
+        return failedCompares;
+    }
 }

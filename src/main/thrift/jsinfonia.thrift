@@ -16,63 +16,63 @@
 namespace java org.apache.people.mreutegg.jsinfonia.thrift
 
 enum TVote {
-	OK,
-	BAD_LOCK, 
-	BAD_FORCED,
-	BAD_CMP,
-	BAD_IO
+    OK,
+    BAD_LOCK,
+    BAD_FORCED,
+    BAD_CMP,
+    BAD_IO
 }
 
 struct TItemReference {
-	1: i32 memoryNodeId,
-	2: i32 address,
-	3: i32 offset,
-	4: optional i32 size
+    1: i32 memoryNodeId,
+    2: i32 address,
+    3: i32 offset,
+    4: optional i32 size
 }
 
 struct TItem {
-	1: TItemReference reference,
-	2: binary data
+    1: TItemReference reference,
+    2: binary data
 }
 
 struct TMiniTransaction {
-	1: string txId,
-	2: list<TItem> compareItems,
-	3: list<TItemReference> readItems,
-	4: list<TItem> writeItems
+    1: string txId,
+    2: list<TItem> compareItems,
+    3: list<TItemReference> readItems,
+    4: list<TItem> writeItems
 }
 
 struct TResult {
-	1: TVote vote,
-	2: list<TItem> readItems,
-	3: list<TItemReference> failedCompares
+    1: TVote vote,
+    2: list<TItem> readItems,
+    3: list<TItemReference> failedCompares
 }
 
 struct TResponse {
-	1: bool success,
-	2: list<TItem> readItems,
-	3: list<TItemReference> failedCompares
+    1: bool success,
+    2: list<TItem> readItems,
+    3: list<TItemReference> failedCompares
 }
 
 struct TMemoryNodeInfo {
-	1: i32 id,
-	2: i32 addressSpace,
-	3: i32 itemSize
+    1: i32 id,
+    2: i32 addressSpace,
+    3: i32 itemSize
 }
 
 service MemoryNodeService {
 
-	TMemoryNodeInfo getInfo(),
-	
-	TResult executeAndPrepare(1:TMiniTransaction tx, 2:set<i32> memoryNodeIds),
-	
-	// oneway?
-	void commit(1:string txId, 2:bool commit)	
+    TMemoryNodeInfo getInfo(),
+
+    TResult executeAndPrepare(1:TMiniTransaction tx, 2:set<i32> memoryNodeIds),
+
+    // oneway?
+    void commit(1:string txId, 2:bool commit)
 }
 
 service ApplicationNodeService {
 
-	list<TMemoryNodeInfo> getMemoryNodeInfos(),
-	
-	TResponse executeTransaction(1:TMiniTransaction tx)
+    list<TMemoryNodeInfo> getMemoryNodeInfos(),
+
+    TResponse executeTransaction(1:TMiniTransaction tx)
 }

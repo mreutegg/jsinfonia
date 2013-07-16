@@ -22,15 +22,15 @@ import org.apache.thrift.TProcessor;
 
 public class ApplicationNodeServer extends ThriftServer {
 
-	private final ApplicationNodeServiceImpl impl;
-	
-	public ApplicationNodeServer(ApplicationNode appNode, int port, boolean nonBlocking) {
-	    super(port, nonBlocking);
-	    this.impl = new ApplicationNodeServiceImpl(appNode);
+    private final ApplicationNodeServiceImpl impl;
+
+    public ApplicationNodeServer(ApplicationNode appNode, int port, boolean nonBlocking) {
+        super(port, nonBlocking);
+        this.impl = new ApplicationNodeServiceImpl(appNode);
     }
 
-	@Override
+    @Override
     protected TProcessor createProcessor() {
-	    return new ApplicationNodeService.Processor<Iface>(impl);
+        return new ApplicationNodeService.Processor<Iface>(impl);
     }
 }

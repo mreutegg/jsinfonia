@@ -37,71 +37,71 @@ import org.apache.thrift.transport.TTransport;
 
 public class ApplicationNodeClient extends ThriftClient<Client> implements ApplicationNode {
 
-	public ApplicationNodeClient(String host, int port, int numConnections, boolean framed)
-			throws TException {
-	    super(host, port, numConnections, framed);
+    public ApplicationNodeClient(String host, int port, int numConnections, boolean framed)
+            throws TException {
+        super(host, port, numConnections, framed);
     }
 
-	@Override
+    @Override
     protected Client createClient(TTransport transport) {
-		return new Client(new TBinaryProtocol(transport));
+        return new Client(new TBinaryProtocol(transport));
     }
 
-	//--------------------------------< ApplicationNode >----------------------
-	
-	@Override
+    //--------------------------------< ApplicationNode >----------------------
+
+    @Override
     public MiniTransaction createMiniTransaction() {
-	    return new MiniTransaction(UUID.randomUUID().toString());
+        return new MiniTransaction(UUID.randomUUID().toString());
     }
 
-	@Override
+    @Override
     public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
-		try {
-	        List<TMemoryNodeInfo> infos = executeWithClient(
-	        		new ClientCallable<List<TMemoryNodeInfo>, Client, TException>() {
-	        	@Override
-	            public List<TMemoryNodeInfo> call(Client client) throws TException {
-	                return client.getMemoryNodeInfos();
-	            }
-	        });
-	        Map<Integer, MemoryNodeInfo> map = new HashMap<Integer, MemoryNodeInfo>();
-	        for (TMemoryNodeInfo info : infos) {
-	        	map.put(info.getId(), new SimpleMemoryNodeInfo(
-	        			info.getId(), info.getAddressSpace(), info.getItemSize()));
-	        }
-	        return map;
-	        
+        try {
+            List<TMemoryNodeInfo> infos = executeWithClient(
+                    new ClientCallable<List<TMemoryNodeInfo>, Client, TException>() {
+                @Override
+                public List<TMemoryNodeInfo> call(Client client) throws TException {
+                    return client.getMemoryNodeInfos();
+                }
+            });
+            Map<Integer, MemoryNodeInfo> map = new HashMap<Integer, MemoryNodeInfo>();
+            for (TMemoryNodeInfo info : infos) {
+                map.put(info.getId(), new SimpleMemoryNodeInfo(
+                        info.getId(), info.getAddressSpace(), info.getItemSize()));
+            }
+            return map;
+
         } catch (TException e) {
-        	throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
-	@Override
+    @Override
     public Response executeTransaction(final MiniTransaction tx) {
-		try {
-			TResponse response = executeWithClient(
-					new ClientCallable<TResponse, Client, TException>() {
-				@Override
-				public TResponse call(Client client) throws TException {
-					return client.executeTransaction(Utils.convert(tx));
-				}
-			});
-			if (response.isSetReadItems()) {
-				Map<ItemReference, Item> readItems = new HashMap<ItemReference, Item>();
-				for (Item item : tx.getReadItems()) {
-					readItems.put(item.getReference(), item);
-				}
-				for (TItem item : response.getReadItems()) {
-					ItemReference r = Utils.convert(item.getReference());
-					Item readItem = readItems.get(r);
-					if (readItem != null) {
-						readItem.getData().put(item.bufferForData());
-					}
-				}
-			}
-			return Utils.convert(response);
-		} catch (TException e) {
-			throw new RuntimeException(e);
-		}
+        try {
+            TResponse response = executeWithClient(
+                    new ClientCallable<TResponse, Client, TException>() {
+                @Override
+                public TResponse call(Client client) throws TException {
+                    return client.executeTransaction(Utils.convert(tx));
+                }
+            });
+            if (response.isSetReadItems()) {
+                Map<ItemReference, Item> readItems = new HashMap<ItemReference, Item>();
+                for (Item item : tx.getReadItems()) {
+                    readItems.put(item.getReference(), item);
+                }
+                for (TItem item : response.getReadItems()) {
+                    ItemReference r = Utils.convert(item.getReference());
+                    Item readItem = readItems.get(r);
+                    if (readItem != null) {
+                        readItem.getData().put(item.bufferForData());
+                    }
+                }
+            }
+            return Utils.convert(response);
+        } catch (TException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

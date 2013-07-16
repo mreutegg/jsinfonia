@@ -22,38 +22,38 @@ import org.junit.Test;
 
 public class InMemoryMemoryNodeTest extends MemoryNodeTestBase {
 
-	@Test
-	public void inMemory() throws Exception {
-    	testSinfoniaInMemory(10, 1024, 4096, 64);
-    	testSinfoniaInMemory(10, 1024, 1024, 64);
-    	testSinfoniaInMemory(10, 1024, 512, 64);
-    	testSinfoniaInMemory(10, 1024, 128, 64);
-    	testSinfoniaInMemory(10, 1024, 32, 64);
-    	System.out.println();
-    	testSinfoniaInMemory(10, 1024, 128, 128);
-    	testSinfoniaInMemory(10, 1024, 128, 64);
-    	testSinfoniaInMemory(10, 1024, 128, 32);
-    	testSinfoniaInMemory(10, 1024, 128, 16);
-    	System.out.println();
-    	testSinfoniaInMemory(1, 1024, 128, 64);
-    	testSinfoniaInMemory(2, 1024, 128, 64);
-    	testSinfoniaInMemory(4, 1024, 128, 64);
-    	testSinfoniaInMemory(8, 1024, 128, 64);
-    	testSinfoniaInMemory(16, 1024, 128, 64);
-    	testSinfoniaInMemory(32, 1024, 128, 64);
-	}
+    @Test
+    public void inMemory() throws Exception {
+        testSinfoniaInMemory(10, 1024, 4096, 64);
+        testSinfoniaInMemory(10, 1024, 1024, 64);
+        testSinfoniaInMemory(10, 1024, 512, 64);
+        testSinfoniaInMemory(10, 1024, 128, 64);
+        testSinfoniaInMemory(10, 1024, 32, 64);
+        System.out.println();
+        testSinfoniaInMemory(10, 1024, 128, 128);
+        testSinfoniaInMemory(10, 1024, 128, 64);
+        testSinfoniaInMemory(10, 1024, 128, 32);
+        testSinfoniaInMemory(10, 1024, 128, 16);
+        System.out.println();
+        testSinfoniaInMemory(1, 1024, 128, 64);
+        testSinfoniaInMemory(2, 1024, 128, 64);
+        testSinfoniaInMemory(4, 1024, 128, 64);
+        testSinfoniaInMemory(8, 1024, 128, 64);
+        testSinfoniaInMemory(16, 1024, 128, 64);
+        testSinfoniaInMemory(32, 1024, 128, 64);
+    }
 
     private void testSinfoniaInMemory(
-    		final int numMemoryNodes,
-    		final int addressSpace,
-    		final int itemSize,
-    		final int numThreads) throws Exception {
-    	SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
-    	for (int i = 0; i < numMemoryNodes; i++) {
-    		directory.addMemoryNode(
-    				new InMemoryMemoryNode(i, addressSpace, itemSize));
-    	}
-    	testSinfonia(directory, addressSpace, itemSize, numThreads);
+            final int numMemoryNodes,
+            final int addressSpace,
+            final int itemSize,
+            final int numThreads) throws Exception {
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        for (int i = 0; i < numMemoryNodes; i++) {
+            directory.addMemoryNode(
+                    new InMemoryMemoryNode(i, addressSpace, itemSize));
+        }
+        testSinfonia(directory, addressSpace, itemSize, numThreads);
     }
     
 }

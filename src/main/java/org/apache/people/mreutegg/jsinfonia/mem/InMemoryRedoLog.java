@@ -30,41 +30,41 @@ import org.apache.people.mreutegg.jsinfonia.RedoLog;
 
 class InMemoryRedoLog implements RedoLog {
 
-	private final Map<String, MiniTransaction> loggedTransactions = Collections.synchronizedMap(new HashMap<String, MiniTransaction>());  
-	
-	private final InMemoryMemoryNode memoryNode;
-	
-	InMemoryRedoLog(InMemoryMemoryNode memoryNode) {
-		this.memoryNode = memoryNode;
-	}
+    private final Map<String, MiniTransaction> loggedTransactions = Collections.synchronizedMap(new HashMap<String, MiniTransaction>());
 
-	@Override
-	public void append(String txId, List<Item> writeItems, Set<Integer> memoryNodeIds)
-	        throws IOException {
-		MiniTransaction tx = new MiniTransaction(txId);
-		for (Item writeItem : writeItems) {
-			tx.addWriteItem(writeItem);
-		}
-		tx.getMemoryNodeIds().addAll(memoryNodeIds);
-		loggedTransactions.put(txId, tx);
-	}
+    private final InMemoryMemoryNode memoryNode;
 
-	@Override
-	public Set<String> getTransactionIDs() {
-		Set<String> txIds = new HashSet<String>();
-		synchronized (loggedTransactions) {
-			for (String txId : loggedTransactions.keySet()) {
-				txIds.add(txId);
-			}
-		}
-		return txIds;
-	}
+    InMemoryRedoLog(InMemoryMemoryNode memoryNode) {
+        this.memoryNode = memoryNode;
+    }
 
-	@Override
-	public void decided(String txId, boolean commit) {
-		MiniTransaction tx = loggedTransactions.remove(txId);
-		if (commit) {
-			memoryNode.applyWrites(tx.getWriteItems());
-		}
-	}
+    @Override
+    public void append(String txId, List<Item> writeItems, Set<Integer> memoryNodeIds)
+            throws IOException {
+        MiniTransaction tx = new MiniTransaction(txId);
+        for (Item writeItem : writeItems) {
+            tx.addWriteItem(writeItem);
+        }
+        tx.getMemoryNodeIds().addAll(memoryNodeIds);
+        loggedTransactions.put(txId, tx);
+    }
+
+    @Override
+    public Set<String> getTransactionIDs() {
+        Set<String> txIds = new HashSet<String>();
+        synchronized (loggedTransactions) {
+            for (String txId : loggedTransactions.keySet()) {
+                txIds.add(txId);
+            }
+        }
+        return txIds;
+    }
+
+    @Override
+    public void decided(String txId, boolean commit) {
+        MiniTransaction tx = loggedTransactions.remove(txId);
+        if (commit) {
+            memoryNode.applyWrites(tx.getWriteItems());
+        }
+    }
 }

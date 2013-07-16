@@ -36,125 +36,125 @@ import com.google.common.util.concurrent.SettableFuture;
 
 public class SimpleApplicationNode implements ApplicationNode {
 
-	private static final Logger log = LoggerFactory.getLogger(SimpleApplicationNode.class);
-	
-	private final MemoryNodeDirectory<? extends MemoryNode> directory;
-	
-	private final ExecutorService executor;
-	
-	private static final AtomicLong txId = new AtomicLong(); 
-	
-	public SimpleApplicationNode(MemoryNodeDirectory<? extends MemoryNode> directory, ExecutorService executor) {
-		this.directory = directory;
-		this.executor = executor;
-	}
+    private static final Logger log = LoggerFactory.getLogger(SimpleApplicationNode.class);
 
-	/* (non-Javadoc)
-	 * @see org.apache.mreutegg.jsinfonia.ApplicationNode#createMiniTransaction()
-	 */
-	@Override
-    public MiniTransaction createMiniTransaction() {
-		return new MiniTransaction("" + txId.incrementAndGet());
-	}
+    private final MemoryNodeDirectory<? extends MemoryNode> directory;
 
-	@Override
-    public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
-		Map<Integer, MemoryNodeInfo> infos = new HashMap<Integer, MemoryNodeInfo>();
-		for (int id : directory.getMemoryNodeIds()) {
-			MemoryNode memoryNode = directory.getMemoryNode(id);
-			infos.put(id, memoryNode.getInfo());
-		}
-	    return infos;
+    private final ExecutorService executor;
+
+    private static final AtomicLong txId = new AtomicLong();
+
+    public SimpleApplicationNode(MemoryNodeDirectory<? extends MemoryNode> directory, ExecutorService executor) {
+        this.directory = directory;
+        this.executor = executor;
     }
-	
-	/* (non-Javadoc)
-	 * @see org.apache.mreutegg.jsinfonia.ApplicationNode#executeTransaction(org.apache.mreutegg.jsinfonia.MiniTransaction)
-	 */
-	@Override
-    public Response executeTransaction(final MiniTransaction tx) {
-		final Set<Integer> memoryNodeIds = tx.getMemoryNodeIds();
-		List<Callable<Result>> callables = new ArrayList<Callable<Result>>(); 
-		for (final Integer memoryNodeId : memoryNodeIds) {
-			final MiniTransaction mt = tx.getTransactionForMemoryNode(memoryNodeId);
-			callables.add(new Callable<Result>() {
-				@Override
-				public Result call() throws Exception {
-					return directory.getMemoryNode(memoryNodeId).executeAndPrepare(mt, memoryNodeIds);
-				}
-			});
-		}
-		
-		final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
-		final boolean[] success = { false };
-		try {
-	        List<? extends Future<Result>> results;
-	        if (callables.size() == 1) {
-	        	// optimize single memory node case
-	        	SettableFuture<Result> f = SettableFuture.create();
-	        	try {
-					f.set(callables.get(0).call());
-				} catch (Exception e) {
-					f.setException(e);
-				}
-	        	results = Collections.singletonList(f);
-	        } else {
-	        	results = executor.invokeAll(callables);
-	        }
-	        boolean isVoteOK = true;
-	        for (Future<Result> result : results) {
-	        	try {
-	        		Vote v = result.get().getVote();
-	                isVoteOK &= v == Vote.OK;
-	                if (v == Vote.BAD_CMP) {
-	                	for (ItemReference ref : result.get().getFailedCompares()) {
-		                	failedCompares.add(ref);
-	                	}
-	                }
-                } catch (ExecutionException e) {
-                	log.warn("Exception on executeAndPrepare", e);
-                	isVoteOK = false;
-                }
-	        }
-	        success[0] = isVoteOK;
-        } catch (InterruptedException e) {
-        	// success = false 
-        } catch (RejectedExecutionException e) {
-        	// success = false;
+
+    /* (non-Javadoc)
+     * @see org.apache.mreutegg.jsinfonia.ApplicationNode#createMiniTransaction()
+     */
+    @Override
+    public MiniTransaction createMiniTransaction() {
+        return new MiniTransaction("" + txId.incrementAndGet());
+    }
+
+    @Override
+    public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
+        Map<Integer, MemoryNodeInfo> infos = new HashMap<Integer, MemoryNodeInfo>();
+        for (int id : directory.getMemoryNodeIds()) {
+            MemoryNode memoryNode = directory.getMemoryNode(id);
+            infos.put(id, memoryNode.getInfo());
         }
-		callables.clear();
-		for (final Integer memoryNodeId : memoryNodeIds) {
-			callables.add(new Callable<Result>() {
-				@Override
+        return infos;
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.mreutegg.jsinfonia.ApplicationNode#executeTransaction(org.apache.mreutegg.jsinfonia.MiniTransaction)
+     */
+    @Override
+    public Response executeTransaction(final MiniTransaction tx) {
+        final Set<Integer> memoryNodeIds = tx.getMemoryNodeIds();
+        List<Callable<Result>> callables = new ArrayList<Callable<Result>>();
+        for (final Integer memoryNodeId : memoryNodeIds) {
+            final MiniTransaction mt = tx.getTransactionForMemoryNode(memoryNodeId);
+            callables.add(new Callable<Result>() {
+                @Override
                 public Result call() throws Exception {
-					MemoryNode mn = directory.getMemoryNode(memoryNodeId);
-					mn.commit(tx.getTxId(), success[0]);
+                    return directory.getMemoryNode(memoryNodeId).executeAndPrepare(mt, memoryNodeIds);
+                }
+            });
+        }
+
+        final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+        final boolean[] success = { false };
+        try {
+            List<? extends Future<Result>> results;
+            if (callables.size() == 1) {
+                // optimize single memory node case
+                SettableFuture<Result> f = SettableFuture.create();
+                try {
+                    f.set(callables.get(0).call());
+                } catch (Exception e) {
+                    f.setException(e);
+                }
+                results = Collections.singletonList(f);
+            } else {
+                results = executor.invokeAll(callables);
+            }
+            boolean isVoteOK = true;
+            for (Future<Result> result : results) {
+                try {
+                    Vote v = result.get().getVote();
+                    isVoteOK &= v == Vote.OK;
+                    if (v == Vote.BAD_CMP) {
+                        for (ItemReference ref : result.get().getFailedCompares()) {
+                            failedCompares.add(ref);
+                        }
+                    }
+                } catch (ExecutionException e) {
+                    log.warn("Exception on executeAndPrepare", e);
+                    isVoteOK = false;
+                }
+            }
+            success[0] = isVoteOK;
+        } catch (InterruptedException e) {
+            // success = false
+        } catch (RejectedExecutionException e) {
+            // success = false;
+        }
+        callables.clear();
+        for (final Integer memoryNodeId : memoryNodeIds) {
+            callables.add(new Callable<Result>() {
+                @Override
+                public Result call() throws Exception {
+                    MemoryNode mn = directory.getMemoryNode(memoryNodeId);
+                    mn.commit(tx.getTxId(), success[0]);
                     return null;
                 }
-			});
-		}
-		if (callables.size() == 1) {
-			// optimize single memory node
-			if (tx.getWriteItems().isEmpty()) {
-				// no commit needed when read-only
-			} else {
-	        	SettableFuture<Result> f = SettableFuture.create();
-	        	try {
-					f.set(callables.get(0).call());
-				} catch (Exception e) {
-					log.warn("Exception on commit", e);
-				}
-			}
-		} else {
-			try {
-		        executor.invokeAll(callables);
-	        } catch (InterruptedException e) {
-	        	// TODO handle?
-	        }
-		}
-		if (success[0]) {
-			return Response.SUCCESS;
-		} else {
-			return Response.failure(failedCompares);
-		}
-	}
+            });
+        }
+        if (callables.size() == 1) {
+            // optimize single memory node
+            if (tx.getWriteItems().isEmpty()) {
+                // no commit needed when read-only
+            } else {
+                SettableFuture<Result> f = SettableFuture.create();
+                try {
+                    f.set(callables.get(0).call());
+                } catch (Exception e) {
+                    log.warn("Exception on commit", e);
+                }
+            }
+        } else {
+            try {
+                executor.invokeAll(callables);
+            } catch (InterruptedException e) {
+                // TODO handle?
+            }
+        }
+        if (success[0]) {
+            return Response.SUCCESS;
+        } else {
+            return Response.failure(failedCompares);
+        }
+    }
 }

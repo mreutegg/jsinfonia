@@ -19,27 +19,27 @@ import org.apache.people.mreutegg.jsinfonia.ItemReference;
 
 public interface TransactionContext {
 
-	/**
-	 * Perform a read operation within this transaction context.
-	 * 
-	 * @param reference
-	 *            the item reference from where to read.
-	 * @param op
-	 *            the read operation to perform.
-	 * 
-	 * @return the result of the read operation.
-	 */
-	public <T> T read(ItemReference reference, DataOperation<T> op);
+    /**
+     * Perform a read operation within this transaction context.
+     *
+     * @param reference
+     *            the item reference from where to read.
+     * @param op
+     *            the read operation to perform.
+     *
+     * @return the result of the read operation.
+     */
+    public <T> T read(ItemReference reference, DataOperation<T> op);
 
-	/**
-	 * Perform a write operation within this transaction context.
-	 * 
-	 * @param reference
-	 *            the item reference where to write.
-	 * @param op
-	 *            the write operation to perform.
-	 * 
-	 * @return the result of the write operation.
-	 */
-	public <T> T write(ItemReference reference, DataOperation<T> op);
+    /**
+     * Perform a write operation within this transaction context.
+     *
+     * @param reference
+     *            the item reference where to write.
+     * @param op
+     *            the write operation to perform.
+     *
+     * @return the result of the write operation.
+     */
+    public <T> T write(ItemReference reference, DataOperation<T> op);
 }

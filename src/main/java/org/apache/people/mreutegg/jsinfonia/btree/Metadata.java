@@ -32,38 +32,37 @@ import org.apache.people.mreutegg.jsinfonia.util.ByteBufferInputStream;
 
 public class Metadata {
 
-	private static final int MAGIC = 1029384756;
-	
-	private final TransactionContext txContext;
-	
-	private int version;
-	
-	private int modCount;
-	
-	private ItemReference rootNodeRef;
-	
-	private ItemReference versionTableRef;
-	
-	/**
-	 * TODO: initialize and read must be transactional!
-	 * @param appNode
-	 * @throws IOException
-	 */
-	public Metadata(TransactionContext txContext) throws IOException {
-		this.txContext = txContext;
-	}
-	
-	public VersionTable getVersionTable() {
-		return new VersionTable();
-	}
-	
-	public BTreeNode getRootNode() {
-		// TODO
-		return null;
-	}
+    private static final int MAGIC = 1029384756;
 
-	private DataInputStream initialize() {
-	    // TODO Auto-generated method stub
-		return null;
+    private final TransactionContext txContext;
+
+    private int version;
+
+    private int modCount;
+
+    private ItemReference rootNodeRef;
+
+    private ItemReference versionTableRef;
+
+    /**
+     * TODO: initialize and read must be transactional!
+     * @throws IOException
+     */
+    public Metadata(TransactionContext txContext) throws IOException {
+        this.txContext = txContext;
+    }
+
+    public VersionTable getVersionTable() {
+        return new VersionTable();
+    }
+
+    public BTreeNode getRootNode() {
+        // TODO
+        return null;
+    }
+
+    private DataInputStream initialize() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -23,79 +23,79 @@ import org.apache.people.mreutegg.jsinfonia.util.ItemManagerFactory;
 
 public class BTree {
 
-	private final TransactionManager txManager;
-	private final ItemManagerFactory factory;
-	private final ItemReference headerRef;
-	private final BTreeNode root;
-	
-	public BTree(TransactionManager txManager, ItemManagerFactory factory,
-			ItemReference headerRef) {
-		this.txManager = txManager;
-		this.factory = factory;
-		this.headerRef = headerRef;
-		this.root = new BTreeNode();
-	}
-	
-	public byte[] lookup(String key) {
-		return txManager.execute(new Transaction<byte[]>() {
-			@Override
-			public byte[] perform(TransactionContext txContext) {
-				// TODO
-				return null;
-			}
-		});
-	}
-	
-	public boolean update(String key, byte[] value) {
-		return txManager.execute(new Transaction<Boolean>() {
-			@Override
-			public Boolean perform(TransactionContext txContext) {
-				// TODO
-				return false;
-			}
-		});
-	}
-	
-	public void insert(String key, byte[] value) {
-		txManager.execute(new Transaction<Void>() {
-			@Override
-			public Void perform(TransactionContext txContext) {
-				// TODO
-				return null;
-			}
-		});
-	}
-	
-	public boolean delete(String key) {
-		return txManager.execute(new Transaction<Boolean>() {
-			@Override
-			public Boolean perform(TransactionContext txContext) {
-				// TODO
-				return false;
-			}
-		});
-	}
-	
-	public String getNext(String key) {
-		return txManager.execute(new Transaction<String>() {
-			@Override
-			public String perform(TransactionContext txContext) {
-				// TODO
-				return null;
-			}
-		});
-	}
-	
-	public String getPrevious(String key) {
-		return txManager.execute(new Transaction<String>() {
-			@Override
-			public String perform(TransactionContext txContext) {
-				// TODO
-				return null;
-			}
-		});
-	}
-	
-	//---------------------------------< internal >----------------------------
-	
+    private final TransactionManager txManager;
+    private final ItemManagerFactory factory;
+    private final ItemReference headerRef;
+    private final BTreeNode root;
+
+    public BTree(TransactionManager txManager, ItemManagerFactory factory,
+            ItemReference headerRef) {
+        this.txManager = txManager;
+        this.factory = factory;
+        this.headerRef = headerRef;
+        this.root = new BTreeNode();
+    }
+
+    public byte[] lookup(String key) {
+        return txManager.execute(new Transaction<byte[]>() {
+            @Override
+            public byte[] perform(TransactionContext txContext) {
+                // TODO
+                return null;
+            }
+        });
+    }
+
+    public boolean update(String key, byte[] value) {
+        return txManager.execute(new Transaction<Boolean>() {
+            @Override
+            public Boolean perform(TransactionContext txContext) {
+                // TODO
+                return false;
+            }
+        });
+    }
+
+    public void insert(String key, byte[] value) {
+        txManager.execute(new Transaction<Void>() {
+            @Override
+            public Void perform(TransactionContext txContext) {
+                // TODO
+                return null;
+            }
+        });
+    }
+
+    public boolean delete(String key) {
+        return txManager.execute(new Transaction<Boolean>() {
+            @Override
+            public Boolean perform(TransactionContext txContext) {
+                // TODO
+                return false;
+            }
+        });
+    }
+
+    public String getNext(String key) {
+        return txManager.execute(new Transaction<String>() {
+            @Override
+            public String perform(TransactionContext txContext) {
+                // TODO
+                return null;
+            }
+        });
+    }
+
+    public String getPrevious(String key) {
+        return txManager.execute(new Transaction<String>() {
+            @Override
+            public String perform(TransactionContext txContext) {
+                // TODO
+                return null;
+            }
+        });
+    }
+
+    //---------------------------------< internal >----------------------------
+
 }

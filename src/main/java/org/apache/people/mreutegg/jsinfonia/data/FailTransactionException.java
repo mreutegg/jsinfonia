@@ -17,21 +17,21 @@ package org.apache.people.mreutegg.jsinfonia.data;
 
 public class FailTransactionException extends RuntimeException {
 
-	private static final long serialVersionUID = 3912929452131625265L;
+    private static final long serialVersionUID = 3912929452131625265L;
 
-	public FailTransactionException(String message) {
-		super(message);
-	}
-	
-	public FailTransactionException(RuntimeException cause) {
-		super(cause);
-	}
+    public FailTransactionException(String message) {
+        super(message);
+    }
 
-	public FailTransactionException(String message, RuntimeException cause) {
-		super(message, cause);
-	}
-	
-	public RuntimeException getCause() {
-		return (RuntimeException) super.getCause();
-	}
+    public FailTransactionException(RuntimeException cause) {
+        super(cause);
+    }
+
+    public FailTransactionException(String message, RuntimeException cause) {
+        super(message, cause);
+    }
+
+    public RuntimeException getCause() {
+        return (RuntimeException) super.getCause();
+    }
 }

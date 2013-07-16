@@ -44,116 +44,116 @@ import org.junit.Test;
 
 public class SinfoniaListTest {
 
-	private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-	private static final int NUM_MEMORY_NODES = 4;
-	private static final int ADDRESS_SPACE = 1024;
-	private static final int ITEM_SIZE = 1024;
-	private ApplicationNode appNode;
-	private TransactionManager txMgr;
-	private ItemManagerFactory itemMgrFactory;
-	
-	
-	@Before
-	public void init() {
-		SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
-		for (int i = 0; i < NUM_MEMORY_NODES; i++) {
-			directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
-		}
-		appNode = new SimpleApplicationNode(directory, EXECUTOR);
-		txMgr = createTransactionManager();
-		// initialize item manager & factory
-		final List<ItemReference> itemMgrHeaderRefs = txMgr.execute(
-				new Transaction<List<ItemReference>>() {
-			@Override
-			public List<ItemReference> perform(TransactionContext txContext) {
-				List<ItemReference> headerRefs = new ArrayList<ItemReference>();
-				for (int i = 0; i < NUM_MEMORY_NODES; i++) {
-					headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
-				}
-				return headerRefs;
-			}
-		});
-		itemMgrFactory = new ItemManagerFactory() {
-			@Override
-			public ItemManager createItemManager(TransactionContext txContext) {
-				Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
-				for (ItemReference r : itemMgrHeaderRefs) {
-					itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
-				}
-				return new CompositeItemManager(itemMgrs);
-			}
-		};
-	}
-	
-	@Test
-	public void size() {
-		List<Integer> list = createList();
-		assertEquals(0, list.size());
-	}
-	
-	@Test
-	public void add() {
-		List<Integer> list = createList();
-		int numValues = 1000;
-		for (int i = 0; i < numValues; i++) {
-			list.add(i);
-		}
-		assertEquals(numValues, list.size());
-	}
-	
-	@Test
-	public void iterator() {
-		List<Integer> list = createList();
-		int numValues = 1000;
-		for (int i = 0; i < numValues; i++) {
-			list.add(i);
-		}
-		int i = 0;
-		for (Integer value : list) {
-			assertEquals(i++, value.intValue());
-		}
-	}
-	
-	private List<Integer> createList() {
-		return txMgr.execute(new Transaction<List<Integer>>() {
-			@Override
-			public List<Integer> perform(TransactionContext txContext) {
-				ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
-				return SinfoniaList.newList(ref, txContext, itemMgrFactory,
-						new BucketReader<Integer>() {
-							@Override
-							public Iterable<Integer> read(ByteBuffer data) {
-								char num = data.getChar();
-								List<Integer> items = new ArrayList<Integer>();
-								while (num-- > 0) {
-									items.add(data.getInt());
-								}
-								return items;
-							}
-						},
-						new BucketWriter<Integer>() {
-							@Override
-							public int write(Iterable<Integer> entries,
-									ByteBuffer data) {
-								char num = 0;
-								data.putChar(num);
-								try {
-									for (Integer i : entries) {
-										data.putInt(i);
-										num++;
-									}
-								} catch (BufferOverflowException e) {
-									// stop writing more entries
-								}
-								data.putChar(0, num);
-								return num;
-							}
-						});
-			}
-		});
-	}
-	
-	private TransactionManager createTransactionManager() {
-		return new TransactionManager(appNode, new DataItemCache(128));
-	}
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final int NUM_MEMORY_NODES = 4;
+    private static final int ADDRESS_SPACE = 1024;
+    private static final int ITEM_SIZE = 1024;
+    private ApplicationNode appNode;
+    private TransactionManager txMgr;
+    private ItemManagerFactory itemMgrFactory;
+
+
+    @Before
+    public void init() {
+        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
+        for (int i = 0; i < NUM_MEMORY_NODES; i++) {
+            directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
+        }
+        appNode = new SimpleApplicationNode(directory, EXECUTOR);
+        txMgr = createTransactionManager();
+        // initialize item manager & factory
+        final List<ItemReference> itemMgrHeaderRefs = txMgr.execute(
+                new Transaction<List<ItemReference>>() {
+            @Override
+            public List<ItemReference> perform(TransactionContext txContext) {
+                List<ItemReference> headerRefs = new ArrayList<ItemReference>();
+                for (int i = 0; i < NUM_MEMORY_NODES; i++) {
+                    headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
+                }
+                return headerRefs;
+            }
+        });
+        itemMgrFactory = new ItemManagerFactory() {
+            @Override
+            public ItemManager createItemManager(TransactionContext txContext) {
+                Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+                for (ItemReference r : itemMgrHeaderRefs) {
+                    itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
+                }
+                return new CompositeItemManager(itemMgrs);
+            }
+        };
+    }
+
+    @Test
+    public void size() {
+        List<Integer> list = createList();
+        assertEquals(0, list.size());
+    }
+
+    @Test
+    public void add() {
+        List<Integer> list = createList();
+        int numValues = 1000;
+        for (int i = 0; i < numValues; i++) {
+            list.add(i);
+        }
+        assertEquals(numValues, list.size());
+    }
+
+    @Test
+    public void iterator() {
+        List<Integer> list = createList();
+        int numValues = 1000;
+        for (int i = 0; i < numValues; i++) {
+            list.add(i);
+        }
+        int i = 0;
+        for (Integer value : list) {
+            assertEquals(i++, value.intValue());
+        }
+    }
+
+    private List<Integer> createList() {
+        return txMgr.execute(new Transaction<List<Integer>>() {
+            @Override
+            public List<Integer> perform(TransactionContext txContext) {
+                ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
+                return SinfoniaList.newList(ref, txContext, itemMgrFactory,
+                        new BucketReader<Integer>() {
+                            @Override
+                            public Iterable<Integer> read(ByteBuffer data) {
+                                char num = data.getChar();
+                                List<Integer> items = new ArrayList<Integer>();
+                                while (num-- > 0) {
+                                    items.add(data.getInt());
+                                }
+                                return items;
+                            }
+                        },
+                        new BucketWriter<Integer>() {
+                            @Override
+                            public int write(Iterable<Integer> entries,
+                                    ByteBuffer data) {
+                                char num = 0;
+                                data.putChar(num);
+                                try {
+                                    for (Integer i : entries) {
+                                        data.putInt(i);
+                                        num++;
+                                    }
+                                } catch (BufferOverflowException e) {
+                                    // stop writing more entries
+                                }
+                                data.putChar(0, num);
+                                return num;
+                            }
+                        });
+            }
+        });
+    }
+
+    private TransactionManager createTransactionManager() {
+        return new TransactionManager(appNode, new DataItemCache(128));
+    }
 }

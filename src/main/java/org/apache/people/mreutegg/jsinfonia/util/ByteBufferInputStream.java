@@ -21,29 +21,29 @@ import java.nio.ByteBuffer;
 
 public class ByteBufferInputStream extends InputStream {
 
-	private final ByteBuffer buffer;
-	
-	public ByteBufferInputStream(ByteBuffer buffer) {
-		this.buffer = buffer.duplicate();
-	}
-	
-	@Override
-	public int read() throws IOException {
-		if (buffer.remaining() == 0) {
-			return -1;
-		}
-		return buffer.get() & 0xff;
-	}
+    private final ByteBuffer buffer;
 
-	@Override
-	public int read(byte[] b, int off, int len) throws IOException {
-		if (buffer.remaining() < len) {
-			len = buffer.remaining();
-		}
-		buffer.get(b, off, len);
-		return len;
-	}
-	
-	
+    public ByteBufferInputStream(ByteBuffer buffer) {
+        this.buffer = buffer.duplicate();
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (buffer.remaining() == 0) {
+            return -1;
+        }
+        return buffer.get() & 0xff;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (buffer.remaining() < len) {
+            len = buffer.remaining();
+        }
+        buffer.get(b, off, len);
+        return len;
+    }
+
+
 
 }

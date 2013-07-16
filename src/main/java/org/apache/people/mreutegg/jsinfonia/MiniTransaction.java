@@ -22,82 +22,82 @@ import java.util.Set;
 
 public class MiniTransaction {
 
-	private final String txId;
-	
-	private final Set<Integer> memoryNodeIds = new HashSet<Integer>();
-	
-	private final List<Item> compareItems = new ArrayList<Item>();
-	
-	private final List<Item> readItems = new ArrayList<Item>();
-	
-	private final List<Item> writeItems = new ArrayList<Item>();
-	
-	public MiniTransaction(String txId) {
-		this.txId = txId;
-	}
-	
-	public void addCompareItem(Item item) {
-		memoryNodeIds.add(item.getMemoryNodeId());
-		compareItems.add(item);
-	}
-	
-	public void addReadItem(Item item) {
-		memoryNodeIds.add(item.getMemoryNodeId());
-		readItems.add(item);
-	}
-	
-	public void addWriteItem(Item item) {
-		memoryNodeIds.add(item.getMemoryNodeId());
-		writeItems.add(item);
-	}
+    private final String txId;
 
-	public String getTxId() {
-		return txId;
-	}
-	
-	public Set<Integer> getMemoryNodeIds() {
-		return memoryNodeIds;
-	}
-	
-	public List<Item> getCompareItems() {
-		return compareItems;
-	}
-	
-	public List<Item> getReadItems() {
-		return readItems;
-	}
-	
-	public List<Item> getWriteItems() {
-		return writeItems;
-	}
-	
-	public MiniTransaction getTransactionForMemoryNode(int id) {
-		if (!memoryNodeIds.contains(id)) {
-			throw new IllegalArgumentException("unknown transaction id " + id);
-		}
+    private final Set<Integer> memoryNodeIds = new HashSet<Integer>();
 
-		// optimize single node case
-		if (memoryNodeIds.size() == 1) {
-			return this;
-		}
-		
-		MiniTransaction mt = new MiniTransaction(txId);
-		for (Item compareItem : compareItems) {
-			if (compareItem.getMemoryNodeId() == id) {
-				mt.addCompareItem(compareItem);
-			}
-		}
-		for (Item readItem : readItems) {
-			if (readItem.getMemoryNodeId() == id) {
-				mt.addReadItem(readItem);
-			}
-		}
-		for (Item writeItem : writeItems) {
-			if (writeItem.getMemoryNodeId() == id) {
-				mt.addWriteItem(writeItem);
-			}
-		}
-		return mt;
-	}
-	
+    private final List<Item> compareItems = new ArrayList<Item>();
+
+    private final List<Item> readItems = new ArrayList<Item>();
+
+    private final List<Item> writeItems = new ArrayList<Item>();
+
+    public MiniTransaction(String txId) {
+        this.txId = txId;
+    }
+
+    public void addCompareItem(Item item) {
+        memoryNodeIds.add(item.getMemoryNodeId());
+        compareItems.add(item);
+    }
+
+    public void addReadItem(Item item) {
+        memoryNodeIds.add(item.getMemoryNodeId());
+        readItems.add(item);
+    }
+
+    public void addWriteItem(Item item) {
+        memoryNodeIds.add(item.getMemoryNodeId());
+        writeItems.add(item);
+    }
+
+    public String getTxId() {
+        return txId;
+    }
+
+    public Set<Integer> getMemoryNodeIds() {
+        return memoryNodeIds;
+    }
+
+    public List<Item> getCompareItems() {
+        return compareItems;
+    }
+
+    public List<Item> getReadItems() {
+        return readItems;
+    }
+
+    public List<Item> getWriteItems() {
+        return writeItems;
+    }
+
+    public MiniTransaction getTransactionForMemoryNode(int id) {
+        if (!memoryNodeIds.contains(id)) {
+            throw new IllegalArgumentException("unknown transaction id " + id);
+        }
+
+        // optimize single node case
+        if (memoryNodeIds.size() == 1) {
+            return this;
+        }
+
+        MiniTransaction mt = new MiniTransaction(txId);
+        for (Item compareItem : compareItems) {
+            if (compareItem.getMemoryNodeId() == id) {
+                mt.addCompareItem(compareItem);
+            }
+        }
+        for (Item readItem : readItems) {
+            if (readItem.getMemoryNodeId() == id) {
+                mt.addReadItem(readItem);
+            }
+        }
+        for (Item writeItem : writeItems) {
+            if (writeItem.getMemoryNodeId() == id) {
+                mt.addWriteItem(writeItem);
+            }
+        }
+        return mt;
+    }
+
 }

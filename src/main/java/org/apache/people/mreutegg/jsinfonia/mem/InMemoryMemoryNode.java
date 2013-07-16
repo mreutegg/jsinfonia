@@ -28,55 +28,55 @@ import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeInfo;
 
 public class InMemoryMemoryNode extends AbstractMemoryNode {
 
-	private final List<Item> items;
-	
-	private final InMemoryRedoLog redoLog = new InMemoryRedoLog(this);
-	
-	private final ByteBuffer empty;
-	
-	public InMemoryMemoryNode(int memoryNodeId, int addressSpace, int itemSize) {
-	    super(new SimpleMemoryNodeInfo(memoryNodeId, addressSpace, itemSize));
-	    items = new ArrayList<Item>(addressSpace);
-	    for (int i = 0; i < addressSpace; i++) {
-	    	items.add(null);
-	    }
-	    this.empty = ByteBuffer.allocate(itemSize);
+    private final List<Item> items;
+
+    private final InMemoryRedoLog redoLog = new InMemoryRedoLog(this);
+
+    private final ByteBuffer empty;
+
+    public InMemoryMemoryNode(int memoryNodeId, int addressSpace, int itemSize) {
+        super(new SimpleMemoryNodeInfo(memoryNodeId, addressSpace, itemSize));
+        items = new ArrayList<Item>(addressSpace);
+        for (int i = 0; i < addressSpace; i++) {
+            items.add(null);
+        }
+        this.empty = ByteBuffer.allocate(itemSize);
     }
 
-	@Override
+    @Override
     protected RedoLog getRedoLog() {
-		return redoLog;
+        return redoLog;
     }
-	
-	@Override
+
+    @Override
     protected void readData(int address, int offset, ByteBuffer buffer)
             throws IOException {
-		checkReadBuffer(buffer, offset);
-		ByteBuffer data;
-		Item item = items.get(address);
-		if (item == null) {
-			data = empty;
-		} else {
-			data = item.getData();
-		}
-		data = data.duplicate();
-		data.position(offset);
-		data.limit(offset + buffer.remaining());
-		buffer.duplicate().put(data);
+        checkReadBuffer(buffer, offset);
+        ByteBuffer data;
+        Item item = items.get(address);
+        if (item == null) {
+            data = empty;
+        } else {
+            data = item.getData();
+        }
+        data = data.duplicate();
+        data.position(offset);
+        data.limit(offset + buffer.remaining());
+        buffer.duplicate().put(data);
     }
 
-	//-------------------------< InMemoryMemoryNode >--------------------------
+    //-------------------------< InMemoryMemoryNode >--------------------------
 
     void applyWrites(List<Item> writeItems) {
-    	for (Item writeItem : writeItems) {
-    		Item item = items.get(writeItem.getAddress());
-    		if (item == null) {
-    			item = new Item(getInfo(), writeItem.getAddress());
-    			items.set(writeItem.getAddress(), item);
-    		}
-    		ByteBuffer dst = item.getData();
-    		dst.position(writeItem.getOffset());
-    		dst.put(writeItem.getData());
-    	}
+        for (Item writeItem : writeItems) {
+            Item item = items.get(writeItem.getAddress());
+            if (item == null) {
+                item = new Item(getInfo(), writeItem.getAddress());
+                items.set(writeItem.getAddress(), item);
+            }
+            ByteBuffer dst = item.getData();
+            dst.position(writeItem.getOffset());
+            dst.put(writeItem.getData());
+        }
     }
 }

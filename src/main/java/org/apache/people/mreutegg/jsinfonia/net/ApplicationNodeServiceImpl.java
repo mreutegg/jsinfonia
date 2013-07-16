@@ -32,44 +32,44 @@ import org.apache.thrift.TException;
 
 public class ApplicationNodeServiceImpl implements ApplicationNodeService.Iface {
 
-	private final ApplicationNode appNode;
-	
-	public ApplicationNodeServiceImpl(ApplicationNode appNode) {
-		this.appNode = appNode;
-	}
-	
-	@Override
-    public List<TMemoryNodeInfo> getMemoryNodeInfos() throws TException {
-		List<TMemoryNodeInfo> infos = new ArrayList<TMemoryNodeInfo>();
-		for (MemoryNodeInfo mni : appNode.getMemoryNodeInfos().values()) {
-			TMemoryNodeInfo info = new TMemoryNodeInfo();
-			info.setId(mni.getId());
-			info.setAddressSpace(mni.getAddressSpace());
-			info.setItemSize(mni.getItemSize());
-			infos.add(info);
-		}
-		return infos;
+    private final ApplicationNode appNode;
+
+    public ApplicationNodeServiceImpl(ApplicationNode appNode) {
+        this.appNode = appNode;
     }
 
-	@Override
+    @Override
+    public List<TMemoryNodeInfo> getMemoryNodeInfos() throws TException {
+        List<TMemoryNodeInfo> infos = new ArrayList<TMemoryNodeInfo>();
+        for (MemoryNodeInfo mni : appNode.getMemoryNodeInfos().values()) {
+            TMemoryNodeInfo info = new TMemoryNodeInfo();
+            info.setId(mni.getId());
+            info.setAddressSpace(mni.getAddressSpace());
+            info.setItemSize(mni.getItemSize());
+            infos.add(info);
+        }
+        return infos;
+    }
+
+    @Override
     public TResponse executeTransaction(TMiniTransaction tx) throws TException {
-		MiniTransaction miniTx = Utils.convert(tx);
-		TResponse response = Utils.convert(appNode.executeTransaction(miniTx));
-		if (response.isSuccess()) {
-			List<Item> readItems = miniTx.getReadItems();
-			for (int i = 0; i < readItems.size(); i++) {
-				Item readItem = readItems.get(i);
-				TItem item = new TItem();
-				TItemReference ref = new TItemReference();
-				ref.setMemoryNodeId(readItem.getMemoryNodeId());
-				ref.setAddress(readItem.getAddress());
-				ref.setOffset(readItem.getOffset());
-				item.setReference(ref);
-				item.setData(readItem.getData());
-				response.addToReadItems(item);
-			}
-		}
-		return response;
+        MiniTransaction miniTx = Utils.convert(tx);
+        TResponse response = Utils.convert(appNode.executeTransaction(miniTx));
+        if (response.isSuccess()) {
+            List<Item> readItems = miniTx.getReadItems();
+            for (int i = 0; i < readItems.size(); i++) {
+                Item readItem = readItems.get(i);
+                TItem item = new TItem();
+                TItemReference ref = new TItemReference();
+                ref.setMemoryNodeId(readItem.getMemoryNodeId());
+                ref.setAddress(readItem.getAddress());
+                ref.setOffset(readItem.getOffset());
+                item.setReference(ref);
+                item.setData(readItem.getData());
+                response.addToReadItems(item);
+            }
+        }
+        return response;
     }
 
 }

@@ -29,39 +29,39 @@ import org.apache.people.mreutegg.jsinfonia.ItemReference;
  */
 public class CompositeItemManager implements ItemManager {
 
-	private final Map<Integer, ItemManager> itemManagers = new HashMap<Integer, ItemManager>();
+    private final Map<Integer, ItemManager> itemManagers = new HashMap<Integer, ItemManager>();
 
-	private final Random random = new Random(0);
-	
-	public CompositeItemManager(Map<Integer, ItemManager> itemManagers) {
-		this.itemManagers.putAll(itemManagers);
-	}
-	
-	@Override
-	public ItemReference alloc() {
-		List<Integer> memoryNodeIds = new ArrayList<Integer>();
-		memoryNodeIds.addAll(itemManagers.keySet());
-		while (!memoryNodeIds.isEmpty()) {
-			int idx = random.nextInt(memoryNodeIds.size());
-			Integer memoryNodeId = memoryNodeIds.get(idx);
-			ItemManager itemMgr = itemManagers.get(memoryNodeId);
-			ItemReference ref = itemMgr.alloc();
-			if (ref != null) {
-				return ref;
-			} else {
-				memoryNodeIds.remove(idx);
-			}
-		}
-		return null;
-	}
+    private final Random random = new Random(0);
 
-	@Override
-	public void free(ItemReference ref) {
-		ItemManager itemMgr = itemManagers.get(ref.getMemoryNodeId());
-		if (itemMgr == null) {
-			throw new IllegalArgumentException();
-		}
-		itemMgr.free(ref);
-	}
+    public CompositeItemManager(Map<Integer, ItemManager> itemManagers) {
+        this.itemManagers.putAll(itemManagers);
+    }
+
+    @Override
+    public ItemReference alloc() {
+        List<Integer> memoryNodeIds = new ArrayList<Integer>();
+        memoryNodeIds.addAll(itemManagers.keySet());
+        while (!memoryNodeIds.isEmpty()) {
+            int idx = random.nextInt(memoryNodeIds.size());
+            Integer memoryNodeId = memoryNodeIds.get(idx);
+            ItemManager itemMgr = itemManagers.get(memoryNodeId);
+            ItemReference ref = itemMgr.alloc();
+            if (ref != null) {
+                return ref;
+            } else {
+                memoryNodeIds.remove(idx);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void free(ItemReference ref) {
+        ItemManager itemMgr = itemManagers.get(ref.getMemoryNodeId());
+        if (itemMgr == null) {
+            throw new IllegalArgumentException();
+        }
+        itemMgr.free(ref);
+    }
 
 }

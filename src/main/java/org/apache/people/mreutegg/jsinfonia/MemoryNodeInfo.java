@@ -17,18 +17,18 @@ package org.apache.people.mreutegg.jsinfonia;
 
 public interface MemoryNodeInfo {
 
-	/**
-	 * @return the identifier for this memory node.
-	 */
-	public int getId();
-	
-	/**
-	 * @return the number of addressable items in this memory node.
-	 */
-	public int getAddressSpace();
-	
-	/**
-	 * @return the data size of an item on this memory node.
-	 */
-	public int getItemSize();
+    /**
+     * @return the identifier for this memory node.
+     */
+    public int getId();
+
+    /**
+     * @return the number of addressable items in this memory node.
+     */
+    public int getAddressSpace();
+
+    /**
+     * @return the data size of an item on this memory node.
+     */
+    public int getItemSize();
 }

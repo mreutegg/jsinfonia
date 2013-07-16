@@ -23,70 +23,70 @@ import java.nio.ByteBuffer;
 
 public class ItemReference {
 
-	private final int memoryNodeId;
-	
-	private final int address;
-	
-	public ItemReference(int memoryNodeId, int address) {
-		this.memoryNodeId = memoryNodeId;
-		this.address = address;
-	}
-	
-	public static ItemReference fromBuffer(ByteBuffer buffer) {
-		return new ItemReference(buffer.getInt(), buffer.getInt());
-	}
-	
-	public void toByteBuffer(ByteBuffer buffer) {
-		if (buffer.remaining() < 8) {
-			throw new BufferOverflowException();
-		}
-		buffer.putInt(memoryNodeId);
-		buffer.putInt(address);
-	}
-	
-	public int getMemoryNodeId() {
-    	return memoryNodeId;
+    private final int memoryNodeId;
+
+    private final int address;
+
+    public ItemReference(int memoryNodeId, int address) {
+        this.memoryNodeId = memoryNodeId;
+        this.address = address;
     }
 
-	public int getAddress() {
-    	return address;
+    public static ItemReference fromBuffer(ByteBuffer buffer) {
+        return new ItemReference(buffer.getInt(), buffer.getInt());
     }
-	
-	public static ItemReference readFrom(DataInputStream in)
-			throws IOException {
-		return new ItemReference(in.readInt(), in.readInt());
-	}
-	
-	public void writeTo(DataOutputStream out) throws IOException {
-		out.writeInt(memoryNodeId);
-		out.writeInt(address);
-	}
-	
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("ItemReference(");
-		sb.append(memoryNodeId);
-		sb.append(", ");
-		sb.append(address);
-		sb.append(")");
-		return sb.toString();
-	}
 
-	@Override
+    public void toByteBuffer(ByteBuffer buffer) {
+        if (buffer.remaining() < 8) {
+            throw new BufferOverflowException();
+        }
+        buffer.putInt(memoryNodeId);
+        buffer.putInt(address);
+    }
+
+    public int getMemoryNodeId() {
+        return memoryNodeId;
+    }
+
+    public int getAddress() {
+        return address;
+    }
+
+    public static ItemReference readFrom(DataInputStream in)
+            throws IOException {
+        return new ItemReference(in.readInt(), in.readInt());
+    }
+
+    public void writeTo(DataOutputStream out) throws IOException {
+        out.writeInt(memoryNodeId);
+        out.writeInt(address);
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ItemReference(");
+        sb.append(memoryNodeId);
+        sb.append(", ");
+        sb.append(address);
+        sb.append(")");
+        return sb.toString();
+    }
+
+    @Override
     public int hashCode() {
-		int hash = 17;
-		hash = 37 * hash + memoryNodeId;
-		hash = 37 * hash + address;
+        int hash = 17;
+        hash = 37 * hash + memoryNodeId;
+        hash = 37 * hash + address;
         return hash;
     }
 
-	@Override
+    @Override
     public boolean equals(Object obj) {
-		if (obj instanceof ItemReference) {
-			ItemReference other = (ItemReference) obj;
-			return memoryNodeId == other.memoryNodeId && address == other.address;
-		} else {
-			return false;
-		}
+        if (obj instanceof ItemReference) {
+            ItemReference other = (ItemReference) obj;
+            return memoryNodeId == other.memoryNodeId && address == other.address;
+        } else {
+            return false;
+        }
     }
 }

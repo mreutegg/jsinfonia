@@ -37,70 +37,70 @@ import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeInfo;
 
 public class MemoryNodeClient extends ThriftClient<Client> implements MemoryNode {
 
-	private static final Logger log = LoggerFactory.getLogger(MemoryNodeClient.class);
+    private static final Logger log = LoggerFactory.getLogger(MemoryNodeClient.class);
 
-	private final MemoryNodeInfo info;
-	
-	public MemoryNodeClient(String host, int port, int numConnections, boolean framed)
-			throws TException {
-		super(host, port, numConnections, framed);
-		TMemoryNodeInfo info = executeWithClient(new ClientCallable<TMemoryNodeInfo, Client, TException>() {
-			@Override
-			public TMemoryNodeInfo call(Client client) throws TException {
-				return client.getInfo();
-			}
-		}); 
-		this.info = new SimpleMemoryNodeInfo(info.getId(),
-				info.getAddressSpace(), info.getItemSize());
-	}
-	
+    private final MemoryNodeInfo info;
 
-	@Override
-    protected Client createClient(TTransport transport) {
-		return new Client(new TBinaryProtocol(transport));
+    public MemoryNodeClient(String host, int port, int numConnections, boolean framed)
+            throws TException {
+        super(host, port, numConnections, framed);
+        TMemoryNodeInfo info = executeWithClient(new ClientCallable<TMemoryNodeInfo, Client, TException>() {
+            @Override
+            public TMemoryNodeInfo call(Client client) throws TException {
+                return client.getInfo();
+            }
+        });
+        this.info = new SimpleMemoryNodeInfo(info.getId(),
+                info.getAddressSpace(), info.getItemSize());
     }
 
-	@Override
-	public MemoryNodeInfo getInfo() {
-		return info;
-	}
 
-	@Override
-	public Result executeAndPrepare(final MiniTransaction tx, final Set<Integer> memoryNodeIds) {
-		try {
-			return executeWithClient(new ClientCallable<Result, Client, TException>() {
-				@Override
-				public Result call(Client client) throws TException {
-					TResult result = client.executeAndPrepare(Utils.convert(tx), memoryNodeIds);
-					List<Item> readItems = tx.getReadItems();
-					for (int i = 0; i < result.getReadItemsSize(); i++) {
-						ByteBuffer data = readItems.get(i).getData();
-						ByteBuffer buffer = result.getReadItems().get(i).bufferForData().slice();
-						data.put(buffer);
-					}
-					return Utils.convert(result);
-				}
-			});
-		} catch (TException e) {
-			log.warn("exception on executeAndPrepare", e);
-			return Result.BAD_IO;
-		}
-	}
+    @Override
+    protected Client createClient(TTransport transport) {
+        return new Client(new TBinaryProtocol(transport));
+    }
 
-	@Override
-	public void commit(final String txId, final boolean commit) {
-		try {
-			executeWithClient(new ClientCallable<Void, Client, TException>() {
-				@Override
-				public Void call(Client client) throws TException {
-					client.commit(txId, commit);
-					return null;
-				}
-			});
-		} catch (TException e) {
-			// TODO: this requires a 'recovery coordinator'
-			// see sinfonia paper section 4.4
-			log.warn("unable to commit", e);
-		}
-	}
+    @Override
+    public MemoryNodeInfo getInfo() {
+        return info;
+    }
+
+    @Override
+    public Result executeAndPrepare(final MiniTransaction tx, final Set<Integer> memoryNodeIds) {
+        try {
+            return executeWithClient(new ClientCallable<Result, Client, TException>() {
+                @Override
+                public Result call(Client client) throws TException {
+                    TResult result = client.executeAndPrepare(Utils.convert(tx), memoryNodeIds);
+                    List<Item> readItems = tx.getReadItems();
+                    for (int i = 0; i < result.getReadItemsSize(); i++) {
+                        ByteBuffer data = readItems.get(i).getData();
+                        ByteBuffer buffer = result.getReadItems().get(i).bufferForData().slice();
+                        data.put(buffer);
+                    }
+                    return Utils.convert(result);
+                }
+            });
+        } catch (TException e) {
+            log.warn("exception on executeAndPrepare", e);
+            return Result.BAD_IO;
+        }
+    }
+
+    @Override
+    public void commit(final String txId, final boolean commit) {
+        try {
+            executeWithClient(new ClientCallable<Void, Client, TException>() {
+                @Override
+                public Void call(Client client) throws TException {
+                    client.commit(txId, commit);
+                    return null;
+                }
+            });
+        } catch (TException e) {
+            // TODO: this requires a 'recovery coordinator'
+            // see sinfonia paper section 4.4
+            log.warn("unable to commit", e);
+        }
+    }
 }

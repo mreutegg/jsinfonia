@@ -21,38 +21,38 @@ import java.util.Set;
 
 public class Result {
 
-	public static final Result OK = new Result(Vote.OK);
-	
-	public static final Result BAD_IO = new Result(Vote.BAD_IO);
-	
-	public static final Result BAD_FORCED = new Result(Vote.BAD_FORCED);
-	
-	public static final Result BAD_LOCK = new Result(Vote.BAD_LOCK);
-	
-	private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
-	
-	private final Vote vote;
-	
-	private Result(Vote vote) {
-		this(vote, Collections.<ItemReference>emptyList());
-	}
-	
-	private Result(Vote vote, Iterable<ItemReference> failedCompares) {
-		this.vote = vote;
-		for (ItemReference ref : failedCompares) {
-			this.failedCompares.add(ref);
-		}
-	}
-	
-	public Result(Iterable<ItemReference> failedCompares) {
-		this(Vote.BAD_CMP, failedCompares);
-	}
-	
-	public Vote getVote() {
-		return vote;
-	}
-	
-	public Iterable<ItemReference> getFailedCompares() {
-		return failedCompares;
-	}
+    public static final Result OK = new Result(Vote.OK);
+
+    public static final Result BAD_IO = new Result(Vote.BAD_IO);
+
+    public static final Result BAD_FORCED = new Result(Vote.BAD_FORCED);
+
+    public static final Result BAD_LOCK = new Result(Vote.BAD_LOCK);
+
+    private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+
+    private final Vote vote;
+
+    private Result(Vote vote) {
+        this(vote, Collections.<ItemReference>emptyList());
+    }
+
+    private Result(Vote vote, Iterable<ItemReference> failedCompares) {
+        this.vote = vote;
+        for (ItemReference ref : failedCompares) {
+            this.failedCompares.add(ref);
+        }
+    }
+
+    public Result(Iterable<ItemReference> failedCompares) {
+        this(Vote.BAD_CMP, failedCompares);
+    }
+
+    public Vote getVote() {
+        return vote;
+    }
+
+    public Iterable<ItemReference> getFailedCompares() {
+        return failedCompares;
+    }
 }

@@ -19,20 +19,20 @@ import org.apache.people.mreutegg.jsinfonia.ItemReference;
 
 public interface ItemManager {
 
-	/**
-	 * Allocates an item and returns the reference to that item. This method
-	 * returns <code>null</code> if there are no more free items.
-	 * 
-	 * @return reference to the allocated item or <code>null</code> if none is
-	 *         free anymore.
-	 */
-	public ItemReference alloc();
+    /**
+     * Allocates an item and returns the reference to that item. This method
+     * returns <code>null</code> if there are no more free items.
+     *
+     * @return reference to the allocated item or <code>null</code> if none is
+     *         free anymore.
+     */
+    public ItemReference alloc();
 
-	/**
-	 * Frees the item with the given reference and makes it available again
-	 * to others.
-	 * 
-	 * @param ref reference to the item to free.
-	 */
-	public void free(ItemReference ref);
+    /**
+     * Frees the item with the given reference and makes it available again
+     * to others.
+     *
+     * @param ref reference to the item to free.
+     */
+    public void free(ItemReference ref);
 }

@@ -29,36 +29,36 @@ import org.junit.Test;
 public class GroupMemoryNodeIT extends MemoryNodeTestBase {
 
     @Test
-	public void testSinfoniaGroup() throws Exception {
-    	testSinfoniaGroup(1, 3, 1024, 128, 64);
-    	//testSinfoniaGroup(2, 3, 1024, 128, 64);
-    	//testSinfoniaGroup(4, 3, 1024, 128, 64);
-    	//testSinfoniaGroup(8, 3, 1024, 128, 64);
+    public void testSinfoniaGroup() throws Exception {
+        testSinfoniaGroup(1, 3, 1024, 128, 64);
+        //testSinfoniaGroup(2, 3, 1024, 128, 64);
+        //testSinfoniaGroup(4, 3, 1024, 128, 64);
+        //testSinfoniaGroup(8, 3, 1024, 128, 64);
     }
     
     private void testSinfoniaGroup(
-    		final int numMemoryNodes,
-    		final int numReplicas,
-    		final int addressSpace,
-    		final int itemSize,
-    		final int numThreads) throws Exception {
-    	List<MemoryNodeGroupMember> members = new ArrayList<MemoryNodeGroupMember>();
-    	SimpleMemoryNodeDirectory<MemoryNodeGroupClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeGroupClient>();
-    	for (int i = 0; i < numMemoryNodes; i++) {
-    		for (int j = 0; j < numReplicas; j++) {
-        		MemoryNode memoryNode = new InMemoryMemoryNode(i, addressSpace, itemSize);
-    			members.add(new MemoryNodeGroupMember(memoryNode));
-    		}
-    		directory.addMemoryNode(new MemoryNodeGroupClient(i));
-    	}
-    	
-    	testSinfonia(directory, addressSpace, itemSize, numThreads);
-    	
-    	for (Integer memoryNodeId : directory.getMemoryNodeIds()) {
-    		directory.getMemoryNode(memoryNodeId).close();
-    	}
-    	for (MemoryNodeGroupMember groupMember : members) {
-    		groupMember.close();
-    	}
+            final int numMemoryNodes,
+            final int numReplicas,
+            final int addressSpace,
+            final int itemSize,
+            final int numThreads) throws Exception {
+        List<MemoryNodeGroupMember> members = new ArrayList<MemoryNodeGroupMember>();
+        SimpleMemoryNodeDirectory<MemoryNodeGroupClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeGroupClient>();
+        for (int i = 0; i < numMemoryNodes; i++) {
+            for (int j = 0; j < numReplicas; j++) {
+                MemoryNode memoryNode = new InMemoryMemoryNode(i, addressSpace, itemSize);
+                members.add(new MemoryNodeGroupMember(memoryNode));
+            }
+            directory.addMemoryNode(new MemoryNodeGroupClient(i));
+        }
+
+        testSinfonia(directory, addressSpace, itemSize, numThreads);
+
+        for (Integer memoryNodeId : directory.getMemoryNodeIds()) {
+            directory.getMemoryNode(memoryNodeId).close();
+        }
+        for (MemoryNodeGroupMember groupMember : members) {
+            groupMember.close();
+        }
     }   
 }

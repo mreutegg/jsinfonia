@@ -33,143 +33,143 @@ import org.slf4j.LoggerFactory;
 
 public class DistributedTransactionTest extends AbstractTransactionTest {
 
-	private static final Logger log = LoggerFactory.getLogger(DistributedTransactionTest.class);
-	
-	private static final int NUM_WORKERS = 10;
-	
-	private static final int INITIAL_COUNT = 1000;
+    private static final Logger log = LoggerFactory.getLogger(DistributedTransactionTest.class);
 
-	@Override
-	protected MemoryNodeDirectory<? extends MemoryNode> createDirectory()
-			throws IOException {
-		return createDirectory(2, 1024, 1024, 128);
-	}
+    private static final int NUM_WORKERS = 10;
 
-	public void testTransaction() throws Exception {
-		initData();
-		List<Integer> results = Collections.synchronizedList(new ArrayList<Integer>());
-		List<Thread> workers = new ArrayList<Thread>();
-		for (int i = 0; i < NUM_WORKERS; i++) {
-			workers.add(new Thread(new Worker(createTransactionContext(), results)));
-		}
-		for (Thread t : workers) {
-			t.start();
-		}
-		for (Thread t : workers) {
-			t.join();
-		}
-		verifyData();
-	}
-	
-	private static class Worker implements Runnable {
+    private static final int INITIAL_COUNT = 1000;
 
-		private final TransactionManager context;
-		private final List<Integer> results;
-		
-		Worker(TransactionManager context, List<Integer> results) {
-			this.context = context;
-			this.results = results;
-		}
-		
-		@Override
-		public void run() {
-			int transferred = 0;
-			int transfer;
-			do {
-				transfer = context.execute(new Transaction<Integer>() {
-					@Override
-					public Integer perform(TransactionContext txContext) {
-						final int v = 1 + (int) (Math.random() * 2.0);
-						final int v0 = txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
-							@Override
-							public Integer perform(ByteBuffer data) {
-								return data.getInt(0);
-							}
-						});
-						log.debug("read(0) " + v0);
-						if (v0 == 0) {
-							return -1;
-						}
-						if (v0 < v) {
-							return 0;
-						}
-						txContext.write(new ItemReference(0, 0), new DataOperation<Void>() {
-							@Override
-							public Void perform(ByteBuffer data) {
-								data.putInt(0, v0 - v);
-								return null;
-							}
-							
-						});
-						log.debug("write(0) " + (v0 - v));
+    @Override
+    protected MemoryNodeDirectory<? extends MemoryNode> createDirectory()
+            throws IOException {
+        return createDirectory(2, 1024, 1024, 128);
+    }
 
-						final int v1 = txContext.read(new ItemReference(1, 0), new DataOperation<Integer>() {
-							@Override
-							public Integer perform(ByteBuffer data) {
-								return data.getInt(0);
-							}
-						});
-						log.debug("read(1) " + v1);
-						txContext.write(new ItemReference(1, 0), new DataOperation<Void>() {
-							@Override
-							public Void perform(ByteBuffer data) {
-								data.putInt(0, v1 + v);
-								return null;
-							}
-							
-						});
-						log.debug("write(1) " + (v1 + v));
-						return v;
-					}
-				});
-				if (transfer > 0) {
-					transferred += transfer;
-				}
-			} while (transfer >= 0);
-			results.add(transferred);
-		}
-	}
+    public void testTransaction() throws Exception {
+        initData();
+        List<Integer> results = Collections.synchronizedList(new ArrayList<Integer>());
+        List<Thread> workers = new ArrayList<Thread>();
+        for (int i = 0; i < NUM_WORKERS; i++) {
+            workers.add(new Thread(new Worker(createTransactionContext(), results)));
+        }
+        for (Thread t : workers) {
+            t.start();
+        }
+        for (Thread t : workers) {
+            t.join();
+        }
+        verifyData();
+    }
 
-	private void initData() {
-		TransactionManager context = createTransactionContext();
-		context.execute(new Transaction<Void>() {
-			@Override
-			public Void perform(TransactionContext txContext) {
-				txContext.write(new ItemReference(0, 0), new DataOperation<Void>() {
-					@Override
-					public Void perform(ByteBuffer data) {
-						data.putInt(0, INITIAL_COUNT);
-						return null;
-					}
-				});
-				return null;
-			}
-		});
-	}
+    private static class Worker implements Runnable {
 
-	private void verifyData() {
-		TransactionManager context = createTransactionContext();
-		assertEquals((Integer) 0, context.execute(new Transaction<Integer>() {
-			@Override
-			public Integer perform(TransactionContext txContext) {
-				return txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
-					@Override
-					public Integer perform(ByteBuffer data) {
-						return data.getInt(0);
-					}
-				});
-			}
-		}));
-		assertEquals((Integer) INITIAL_COUNT, context.execute(new Transaction<Integer>() {
-			@Override
-			public Integer perform(TransactionContext txContext) {
-				return txContext.read(new ItemReference(1, 0), new DataOperation<Integer>() {
-					@Override
-					public Integer perform(ByteBuffer data) {
-						return data.getInt(0);
-					}
-				});
-			}
-		}));
-	}
+        private final TransactionManager context;
+        private final List<Integer> results;
+
+        Worker(TransactionManager context, List<Integer> results) {
+            this.context = context;
+            this.results = results;
+        }
+
+        @Override
+        public void run() {
+            int transferred = 0;
+            int transfer;
+            do {
+                transfer = context.execute(new Transaction<Integer>() {
+                    @Override
+                    public Integer perform(TransactionContext txContext) {
+                        final int v = 1 + (int) (Math.random() * 2.0);
+                        final int v0 = txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
+                            @Override
+                            public Integer perform(ByteBuffer data) {
+                                return data.getInt(0);
+                            }
+                        });
+                        log.debug("read(0) " + v0);
+                        if (v0 == 0) {
+                            return -1;
+                        }
+                        if (v0 < v) {
+                            return 0;
+                        }
+                        txContext.write(new ItemReference(0, 0), new DataOperation<Void>() {
+                            @Override
+                            public Void perform(ByteBuffer data) {
+                                data.putInt(0, v0 - v);
+                                return null;
+                            }
+
+                        });
+                        log.debug("write(0) " + (v0 - v));
+
+                        final int v1 = txContext.read(new ItemReference(1, 0), new DataOperation<Integer>() {
+                            @Override
+                            public Integer perform(ByteBuffer data) {
+                                return data.getInt(0);
+                            }
+                        });
+                        log.debug("read(1) " + v1);
+                        txContext.write(new ItemReference(1, 0), new DataOperation<Void>() {
+                            @Override
+                            public Void perform(ByteBuffer data) {
+                                data.putInt(0, v1 + v);
+                                return null;
+                            }
+
+                        });
+                        log.debug("write(1) " + (v1 + v));
+                        return v;
+                    }
+                });
+                if (transfer > 0) {
+                    transferred += transfer;
+                }
+            } while (transfer >= 0);
+            results.add(transferred);
+        }
+    }
+
+    private void initData() {
+        TransactionManager context = createTransactionContext();
+        context.execute(new Transaction<Void>() {
+            @Override
+            public Void perform(TransactionContext txContext) {
+                txContext.write(new ItemReference(0, 0), new DataOperation<Void>() {
+                    @Override
+                    public Void perform(ByteBuffer data) {
+                        data.putInt(0, INITIAL_COUNT);
+                        return null;
+                    }
+                });
+                return null;
+            }
+        });
+    }
+
+    private void verifyData() {
+        TransactionManager context = createTransactionContext();
+        assertEquals((Integer) 0, context.execute(new Transaction<Integer>() {
+            @Override
+            public Integer perform(TransactionContext txContext) {
+                return txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
+                    @Override
+                    public Integer perform(ByteBuffer data) {
+                        return data.getInt(0);
+                    }
+                });
+            }
+        }));
+        assertEquals((Integer) INITIAL_COUNT, context.execute(new Transaction<Integer>() {
+            @Override
+            public Integer perform(TransactionContext txContext) {
+                return txContext.read(new ItemReference(1, 0), new DataOperation<Integer>() {
+                    @Override
+                    public Integer perform(ByteBuffer data) {
+                        return data.getInt(0);
+                    }
+                });
+            }
+        }));
+    }
 }

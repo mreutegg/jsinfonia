@@ -17,28 +17,28 @@ package org.apache.people.mreutegg.jsinfonia;
 
 public class SimpleMemoryNodeInfo implements MemoryNodeInfo {
 
-	private final int id;
-	private final int addressSpace;
-	private final int itemSize;
-	
-	public SimpleMemoryNodeInfo(int id, int addressSpace, int itemSize) {
-		this.id = id;
-		this.addressSpace = addressSpace;
-		this.itemSize = itemSize;
-	}
-	
-	@Override
-	public int getId() {
-		return id;
-	}
+    private final int id;
+    private final int addressSpace;
+    private final int itemSize;
 
-	@Override
-	public int getAddressSpace() {
-		return addressSpace;
-	}
+    public SimpleMemoryNodeInfo(int id, int addressSpace, int itemSize) {
+        this.id = id;
+        this.addressSpace = addressSpace;
+        this.itemSize = itemSize;
+    }
 
-	@Override
-	public int getItemSize() {
-		return itemSize;
-	}
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public int getAddressSpace() {
+        return addressSpace;
+    }
+
+    @Override
+    public int getItemSize() {
+        return itemSize;
+    }
 }

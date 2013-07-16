@@ -26,26 +26,26 @@ import org.apache.people.mreutegg.jsinfonia.util.ItemManagerImpl;
 
 public class ItemManagerImplTest extends ItemManagerTestBase {
 
-	private static final int ADDRESS_SPACE = 1024;
-	
-	private static final int ITEM_SIZE = 1024;
-	
-	@Override
-	protected ItemManager getItemManager(TransactionContext txContext) {
-		return new ItemManagerImpl(txContext, new ItemReference(0, 0));
-	}
+    private static final int ADDRESS_SPACE = 1024;
 
-	@Override
-	protected ApplicationNode createApplicationNode() {
-		SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
-		directory.addMemoryNode(new InMemoryMemoryNode(0, ADDRESS_SPACE, ITEM_SIZE));
-		return new SimpleApplicationNode(directory, EXECUTOR);
-	}
+    private static final int ITEM_SIZE = 1024;
 
-	@Override
-	protected ItemManager initializeItemManager(TransactionContext txContext) {
-		ItemReference header = ItemManagerImpl.initialize(txContext, 0, ADDRESS_SPACE);
-		return new ItemManagerImpl(txContext, header);
-	}
+    @Override
+    protected ItemManager getItemManager(TransactionContext txContext) {
+        return new ItemManagerImpl(txContext, new ItemReference(0, 0));
+    }
+
+    @Override
+    protected ApplicationNode createApplicationNode() {
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        directory.addMemoryNode(new InMemoryMemoryNode(0, ADDRESS_SPACE, ITEM_SIZE));
+        return new SimpleApplicationNode(directory, EXECUTOR);
+    }
+
+    @Override
+    protected ItemManager initializeItemManager(TransactionContext txContext) {
+        ItemReference header = ItemManagerImpl.initialize(txContext, 0, ADDRESS_SPACE);
+        return new ItemManagerImpl(txContext, header);
+    }
 
 }

@@ -27,91 +27,91 @@ import org.apache.thrift.transport.TTransportException;
 
 public abstract class ThriftServer {
 
-	private final int port;
-	
-	private final boolean nonBlocking;
-	
-	private int usedPort;
-	
-	private TServer server;
-	
-	private TServerTransport transport;
+    private final int port;
 
-	public ThriftServer(int port, boolean nonBlocking) {
-		this.port = port;
-		this.nonBlocking = nonBlocking;
+    private final boolean nonBlocking;
+
+    private int usedPort;
+
+    private TServer server;
+
+    private TServerTransport transport;
+
+    public ThriftServer(int port, boolean nonBlocking) {
+        this.port = port;
+        this.nonBlocking = nonBlocking;
     }
 
-	public void start() throws TTransportException {
-		createServer();
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				server.serve();
-			}
-		});
-		t.start();
-		while (!server.isServing()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		t.setName("MemoryNodeServer on port " + usedPort);
-	}
-	
-	public int getPort() {
-		return usedPort;
-	}
-	
-	public void stop() {
-		if (server != null && server.isServing()) {
-			server.stop();
-			server = null;
-		}
-		if (transport != null) {
-			transport.close();
-			transport = null;
-		}
-	}
-	
-	protected abstract TProcessor createProcessor();
-	
-	//---------------------------< internal >----------------------------------
-	
-	private void createServer() throws TTransportException {
-		if (port >= 0) {
-			while (transport == null) {
-				usedPort = (int) (Math.random() * 32000d) + 32000;
-				try {
-					if (nonBlocking) {
-						transport = new TNonblockingServerSocket(usedPort);
-					} else {
-						transport = new TServerSocket(usedPort);
-					}
-				} catch (TTransportException e) {
-					// try another one
-				}
-			}
-		} else {
-			if (nonBlocking) {
-				transport = new TNonblockingServerSocket(port);
-			} else {
-				transport = new TServerSocket(usedPort);
-			}
-			usedPort = port;
-		}
-		TProcessor processor = createProcessor();
-		if (nonBlocking) {
-			server = new TThreadedSelectorServer(
-					new TThreadedSelectorServer
-					.Args((TNonblockingServerSocket) transport)
-					.transportFactory(new TFramedTransport.Factory())
-					.processor(processor));
-		} else {
-			server = new TThreadPoolServer(
-					new TThreadPoolServer.Args(transport)
-					.processor(processor));
-		}
-	}
+    public void start() throws TTransportException {
+        createServer();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                server.serve();
+            }
+        });
+        t.start();
+        while (!server.isServing()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
+        t.setName("MemoryNodeServer on port " + usedPort);
+    }
+
+    public int getPort() {
+        return usedPort;
+    }
+
+    public void stop() {
+        if (server != null && server.isServing()) {
+            server.stop();
+            server = null;
+        }
+        if (transport != null) {
+            transport.close();
+            transport = null;
+        }
+    }
+
+    protected abstract TProcessor createProcessor();
+
+    //---------------------------< internal >----------------------------------
+
+    private void createServer() throws TTransportException {
+        if (port >= 0) {
+            while (transport == null) {
+                usedPort = (int) (Math.random() * 32000d) + 32000;
+                try {
+                    if (nonBlocking) {
+                        transport = new TNonblockingServerSocket(usedPort);
+                    } else {
+                        transport = new TServerSocket(usedPort);
+                    }
+                } catch (TTransportException e) {
+                    // try another one
+                }
+            }
+        } else {
+            if (nonBlocking) {
+                transport = new TNonblockingServerSocket(port);
+            } else {
+                transport = new TServerSocket(usedPort);
+            }
+            usedPort = port;
+        }
+        TProcessor processor = createProcessor();
+        if (nonBlocking) {
+            server = new TThreadedSelectorServer(
+                    new TThreadedSelectorServer
+                    .Args((TNonblockingServerSocket) transport)
+                    .transportFactory(new TFramedTransport.Factory())
+                    .processor(processor));
+        } else {
+            server = new TThreadPoolServer(
+                    new TThreadPoolServer.Args(transport)
+                    .processor(processor));
+        }
+    }
 }

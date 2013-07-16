@@ -20,17 +20,17 @@ import java.util.Map.Entry;
 
 public class LRUMap<K, V> extends LinkedHashMap<K, V> {
 
-	private static final long serialVersionUID = -8550778617166254182L;
-	
-	private final int maxSize;
-	
-	public LRUMap(int maxSize) {
-		this.maxSize = maxSize;
-	}
-	
+    private static final long serialVersionUID = -8550778617166254182L;
+
+    private final int maxSize;
+
+    public LRUMap(int maxSize) {
+        this.maxSize = maxSize;
+    }
+
     @Override
     protected boolean removeEldestEntry(Entry<K, V> eldest) {
-    	return size() > maxSize;
+        return size() > maxSize;
     }
 
     

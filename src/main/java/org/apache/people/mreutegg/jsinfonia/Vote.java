@@ -17,10 +17,10 @@ package org.apache.people.mreutegg.jsinfonia;
 
 public enum Vote {
 
-	OK,			// prepare OK
-	BAD_LOCK, 	// unable to acquire locks 
-	BAD_FORCED,	// forced abort
-	BAD_CMP,	// compare failed
-	BAD_IO;		// I/0 error
+    OK,            // prepare OK
+    BAD_LOCK,     // unable to acquire locks
+    BAD_FORCED,    // forced abort
+    BAD_CMP,    // compare failed
+    BAD_IO;        // I/0 error
 
 }

@@ -19,5 +19,5 @@ import java.nio.ByteBuffer;
 
 public interface DataOperation<T> {
 
-	public T perform(ByteBuffer data);
+    public T perform(ByteBuffer data);
 }

@@ -19,49 +19,49 @@ import java.util.List;
 
 public interface BucketStore<K, V> {
 
-	/**
-	 * The initial number of buckets to allocate.
-	 * 
-	 * @return the initial number of buckets to allocate.
-	 */
-	public int getInitialNumberOfBuckets();
-	
-	public int getSplitIndex();
-	
-	public int incrementAndGetSplitIndex();
-	
-	public void resetSplitIndex();
-	
-	public int getLevel();
-	
-	public void incrementLevel();
-	
-	public int getSize();
-	
-	public List<MapBucket<K, V>> getBucketList();
-	
-	/**
-	 * Allocates / creates a new bucket.
-	 * 
-	 * @return a new bucket
-	 */
-	public MapBucket<K, V> createBucket();
+    /**
+     * The initial number of buckets to allocate.
+     *
+     * @return the initial number of buckets to allocate.
+     */
+    public int getInitialNumberOfBuckets();
 
-	/**
-	 * Gets an existing bucket.
-	 * 
-	 * @param id
-	 *            the bucket id.
-	 * @return the bucket with the id or null if there is no existing bucket
-	 *         with the given id.
-	 */
-	public MapBucket<K, V> getBucket(BucketId id);
+    public int getSplitIndex();
 
-	/**
-	 * Disposes the bucket with the given id.
-	 * 
-	 * @param id
-	 *            the id of the bucket to dispose.
-	 */
-	public void disposeBucket(BucketId id);
+    public int incrementAndGetSplitIndex();
+
+    public void resetSplitIndex();
+
+    public int getLevel();
+
+    public void incrementLevel();
+
+    public int getSize();
+
+    public List<MapBucket<K, V>> getBucketList();
+
+    /**
+     * Allocates / creates a new bucket.
+     *
+     * @return a new bucket
+     */
+    public MapBucket<K, V> createBucket();
+
+    /**
+     * Gets an existing bucket.
+     *
+     * @param id
+     *            the bucket id.
+     * @return the bucket with the id or null if there is no existing bucket
+     *         with the given id.
+     */
+    public MapBucket<K, V> getBucket(BucketId id);
+
+    /**
+     * Disposes the bucket with the given id.
+     *
+     * @param id
+     *            the id of the bucket to dispose.
+     */
+    public void disposeBucket(BucketId id);
 }

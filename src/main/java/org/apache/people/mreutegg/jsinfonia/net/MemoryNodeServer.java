@@ -22,18 +22,18 @@ import org.apache.people.mreutegg.jsinfonia.MemoryNode;
 
 public class MemoryNodeServer extends ThriftServer {
 
-	private final MemoryNodeServiceImpl impl;
-	
-	public MemoryNodeServer(MemoryNode memoryNode, 
-			int port, boolean nonBlocking) {
-		super(port, nonBlocking);
-		this.impl = new MemoryNodeServiceImpl(memoryNode);
-	}
+    private final MemoryNodeServiceImpl impl;
 
-	@Override
-    protected TProcessor createProcessor() {
-		return new MemoryNodeService.Processor<MemoryNodeService.Iface>(impl);
+    public MemoryNodeServer(MemoryNode memoryNode,
+            int port, boolean nonBlocking) {
+        super(port, nonBlocking);
+        this.impl = new MemoryNodeServiceImpl(memoryNode);
     }
-	
-	
+
+    @Override
+    protected TProcessor createProcessor() {
+        return new MemoryNodeService.Processor<MemoryNodeService.Iface>(impl);
+    }
+
+
 }

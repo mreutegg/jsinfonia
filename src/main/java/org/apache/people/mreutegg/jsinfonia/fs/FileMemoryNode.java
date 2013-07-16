@@ -33,87 +33,87 @@ import org.slf4j.LoggerFactory;
 
 public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
 
-	private static final Logger log = LoggerFactory.getLogger(FileMemoryNode.class);
-	
-	private final RandomAccessFile file;
-		
-	private MappedByteBuffer mappedBuffer;
-	
-	private final RollingRedoLog redoLog;
-	
-	private final ItemBuffer itemBuffer;
-	
-	public FileMemoryNode(int memoryNodeId, File file, int addressSpace, int itemSize, int bufferSize)
-			throws IOException {
-	    super(new SimpleMemoryNodeInfo(memoryNodeId, addressSpace, itemSize));
-	    if (!file.exists() && !file.createNewFile()) {
-	    	throw new IOException("Unable to create file: " + file.getAbsolutePath());
-	    }
-	    	
-	    this.file = new RandomAccessFile(file, "rw");
-	    if (this.file.length() < ((long) addressSpace) * ((long) itemSize)) {
-	    	this.file.setLength(((long) addressSpace) * ((long) itemSize));
-	    }
-	    FileChannel channel = this.file.getChannel();
-	    this.mappedBuffer = channel.map(MapMode.READ_WRITE, 0, file.length());
-	    this.itemBuffer = new ItemBuffer(this, bufferSize, itemSize);
-	    this.redoLog = new RollingRedoLog(this, new File(file.getAbsoluteFile() + ".log"));
+    private static final Logger log = LoggerFactory.getLogger(FileMemoryNode.class);
+
+    private final RandomAccessFile file;
+
+    private MappedByteBuffer mappedBuffer;
+
+    private final RollingRedoLog redoLog;
+
+    private final ItemBuffer itemBuffer;
+
+    public FileMemoryNode(int memoryNodeId, File file, int addressSpace, int itemSize, int bufferSize)
+            throws IOException {
+        super(new SimpleMemoryNodeInfo(memoryNodeId, addressSpace, itemSize));
+        if (!file.exists() && !file.createNewFile()) {
+            throw new IOException("Unable to create file: " + file.getAbsolutePath());
+        }
+
+        this.file = new RandomAccessFile(file, "rw");
+        if (this.file.length() < ((long) addressSpace) * ((long) itemSize)) {
+            this.file.setLength(((long) addressSpace) * ((long) itemSize));
+        }
+        FileChannel channel = this.file.getChannel();
+        this.mappedBuffer = channel.map(MapMode.READ_WRITE, 0, file.length());
+        this.itemBuffer = new ItemBuffer(this, bufferSize, itemSize);
+        this.redoLog = new RollingRedoLog(this, new File(file.getAbsoluteFile() + ".log"));
     }
 
-	@Override
-	protected RedoLog getRedoLog() {
-		return redoLog;
-	}
+    @Override
+    protected RedoLog getRedoLog() {
+        return redoLog;
+    }
 
-	@Override
+    @Override
     protected void readData(int address, int offset, ByteBuffer buffer)
             throws IOException {
-		checkReadBuffer(buffer, offset);
-		// check buffer for dirty items first
-		ByteBuffer src = itemBuffer.getItem(address);
-		if (src == null) {
-			// read from mapped file
-			src = mappedBuffer.duplicate();
-			int itemSize = getInfo().getItemSize();
-	    	int position = address * itemSize;
-	    	src.position(position);
-	    	src.limit(position + itemSize);
-	    	src = src.slice();
-		}
-		src.position(offset);
-		src.limit(offset + buffer.remaining());
-		buffer.duplicate().put(src.slice());
+        checkReadBuffer(buffer, offset);
+        // check buffer for dirty items first
+        ByteBuffer src = itemBuffer.getItem(address);
+        if (src == null) {
+            // read from mapped file
+            src = mappedBuffer.duplicate();
+            int itemSize = getInfo().getItemSize();
+            int position = address * itemSize;
+            src.position(position);
+            src.limit(position + itemSize);
+            src = src.slice();
+        }
+        src.position(offset);
+        src.limit(offset + buffer.remaining());
+        buffer.duplicate().put(src.slice());
     }
 
 
-	//--------------------------< Closeable >----------------------------------
+    //--------------------------< Closeable >----------------------------------
 
-	@Override
+    @Override
     public void close() throws IOException {
-		this.redoLog.close();
-		this.itemBuffer.close();
-		this.file.close();
-		this.mappedBuffer = null;
+        this.redoLog.close();
+        this.itemBuffer.close();
+        this.file.close();
+        this.mappedBuffer = null;
     }
-	
-	//------------------------< FileMemoryNode >-------------------------------
+
+    //------------------------< FileMemoryNode >-------------------------------
 
     void applyWrite(ByteBuffer data, int address)
-    		throws IOException {
-    	ByteBuffer dest = mappedBuffer.duplicate();
-    	dest.position(address * getInfo().getItemSize());
-    	dest.put(data);
+            throws IOException {
+        ByteBuffer dest = mappedBuffer.duplicate();
+        dest.position(address * getInfo().getItemSize());
+        dest.put(data);
     }
     
-	void applyWrite(ReadableByteChannel data, int address, int offset, int count)
-			throws IOException {
-	    itemBuffer.applyWrite(data, address, offset, count);
+    void applyWrite(ReadableByteChannel data, int address, int offset, int count)
+            throws IOException {
+        itemBuffer.applyWrite(data, address, offset, count);
     }
-	
+
     public void sync() throws IOException {
-    	long time = System.currentTimeMillis();
-    	this.mappedBuffer.force();
-    	time = System.currentTimeMillis() - time;
-    	log.info("sync time: {} ms.", time);
+        long time = System.currentTimeMillis();
+        this.mappedBuffer.force();
+        time = System.currentTimeMillis() - time;
+        log.info("sync time: {} ms.", time);
     }
 }

@@ -34,46 +34,46 @@ import org.apache.people.mreutegg.jsinfonia.Vote;
 
 public class MemoryNodeServiceImpl implements MemoryNodeService.Iface {
 
-	private final MemoryNode memoryNode;
-	
-	public MemoryNodeServiceImpl(MemoryNode memoryNode) {
-		this.memoryNode = memoryNode;
-	}
-	
-	@Override
-    public TMemoryNodeInfo getInfo() throws TException {
-		TMemoryNodeInfo info = new TMemoryNodeInfo();
-		info.setAddressSpace(memoryNode.getInfo().getAddressSpace());
-		info.setId(memoryNode.getInfo().getId());
-		info.setItemSize(memoryNode.getInfo().getItemSize());
-	    return info;
+    private final MemoryNode memoryNode;
+
+    public MemoryNodeServiceImpl(MemoryNode memoryNode) {
+        this.memoryNode = memoryNode;
     }
 
-	@Override
-	public TResult executeAndPrepare(TMiniTransaction tx, Set<Integer> memoryNodeIds)
-			throws TException {
-		MiniTransaction miniTx = Utils.convert(tx);
-		Result r = memoryNode.executeAndPrepare(miniTx, memoryNodeIds);
-		TResult result = Utils.convert(r);
-		if (r.getVote() == Vote.OK) {
-			List<Item> readItems = miniTx.getReadItems();
-			for (int i = 0; i < readItems.size(); i++) {
-				Item readItem = readItems.get(i);
-				TItem item = new TItem();
-				TItemReference ref = new TItemReference();
-				ref.setMemoryNodeId(memoryNode.getInfo().getId());
-				ref.setAddress(readItem.getAddress());
-				ref.setOffset(readItem.getOffset());
-				item.setReference(ref);
-				item.setData(readItem.getData());
-				result.addToReadItems(item);
-			}
-		}
-		return result;
-	}
+    @Override
+    public TMemoryNodeInfo getInfo() throws TException {
+        TMemoryNodeInfo info = new TMemoryNodeInfo();
+        info.setAddressSpace(memoryNode.getInfo().getAddressSpace());
+        info.setId(memoryNode.getInfo().getId());
+        info.setItemSize(memoryNode.getInfo().getItemSize());
+        return info;
+    }
 
-	@Override
-	public void commit(String txId, boolean commit) throws TException {
-		memoryNode.commit(txId, commit);
-	}
+    @Override
+    public TResult executeAndPrepare(TMiniTransaction tx, Set<Integer> memoryNodeIds)
+            throws TException {
+        MiniTransaction miniTx = Utils.convert(tx);
+        Result r = memoryNode.executeAndPrepare(miniTx, memoryNodeIds);
+        TResult result = Utils.convert(r);
+        if (r.getVote() == Vote.OK) {
+            List<Item> readItems = miniTx.getReadItems();
+            for (int i = 0; i < readItems.size(); i++) {
+                Item readItem = readItems.get(i);
+                TItem item = new TItem();
+                TItemReference ref = new TItemReference();
+                ref.setMemoryNodeId(memoryNode.getInfo().getId());
+                ref.setAddress(readItem.getAddress());
+                ref.setOffset(readItem.getOffset());
+                item.setReference(ref);
+                item.setData(readItem.getData());
+                result.addToReadItems(item);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void commit(String txId, boolean commit) throws TException {
+        memoryNode.commit(txId, commit);
+    }
 }

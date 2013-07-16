@@ -19,13 +19,13 @@ import java.util.Set;
 
 public interface MemoryNode {
 
-	/**
-	 * @return information about this memory node.
-	 */
-	public MemoryNodeInfo getInfo();
-	
-	public Result executeAndPrepare(MiniTransaction tx, Set<Integer> memoryNodeIds);
-	
-	public void commit(String txId, boolean commit);
-	
+    /**
+     * @return information about this memory node.
+     */
+    public MemoryNodeInfo getInfo();
+
+    public Result executeAndPrepare(MiniTransaction tx, Set<Integer> memoryNodeIds);
+
+    public void commit(String txId, boolean commit);
+
 }

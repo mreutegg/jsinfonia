@@ -23,42 +23,42 @@ import com.google.common.cache.CacheBuilder;
 
 public class DataItemCache {
 
-	private final Cache<ItemReference, DataItem> items;
-	
-	public DataItemCache() {
-		this(Integer.MAX_VALUE);
-	}
-	
-	public DataItemCache(int maxSize) {
-		items = CacheBuilder.newBuilder().maximumSize(maxSize).build();
-	}
-	
-	public DataItem getItem(ItemReference ref) {
-		return items.getIfPresent(ref);
-	}
-	
-	public DataItem getItem(int memoryNodeId, int address) {
-		return getItem(new ItemReference(memoryNodeId, address));
-	}
-	
-	public void putItem(ItemReference ref, DataItem item) {
-		items.put(ref, item);
-	}
-	
-	public void putItem(int memoryNodeId, int address, DataItem item) {
-		putItem(new ItemReference(memoryNodeId, address), item);
-	}
-	
-	public Iterable<ItemReference> getKeys() {
-		return items.asMap().keySet();
-	}
-	
-	public void clear() {
-		items.invalidateAll();
-	}
+    private final Cache<ItemReference, DataItem> items;
 
-	public void evict(Iterable<ItemReference> references) {
-		items.invalidateAll(references);
-	}
-	
+    public DataItemCache() {
+        this(Integer.MAX_VALUE);
+    }
+
+    public DataItemCache(int maxSize) {
+        items = CacheBuilder.newBuilder().maximumSize(maxSize).build();
+    }
+
+    public DataItem getItem(ItemReference ref) {
+        return items.getIfPresent(ref);
+    }
+
+    public DataItem getItem(int memoryNodeId, int address) {
+        return getItem(new ItemReference(memoryNodeId, address));
+    }
+
+    public void putItem(ItemReference ref, DataItem item) {
+        items.put(ref, item);
+    }
+
+    public void putItem(int memoryNodeId, int address, DataItem item) {
+        putItem(new ItemReference(memoryNodeId, address), item);
+    }
+
+    public Iterable<ItemReference> getKeys() {
+        return items.asMap().keySet();
+    }
+
+    public void clear() {
+        items.invalidateAll();
+    }
+
+    public void evict(Iterable<ItemReference> references) {
+        items.invalidateAll(references);
+    }
+
 }

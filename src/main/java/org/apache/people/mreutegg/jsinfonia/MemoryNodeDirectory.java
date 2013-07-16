@@ -19,7 +19,7 @@ import java.util.Set;
 
 public interface MemoryNodeDirectory<T extends MemoryNode> {
 
-	public T getMemoryNode(int id);
-	
-	public Set<Integer> getMemoryNodeIds();
+    public T getMemoryNode(int id);
+
+    public Set<Integer> getMemoryNodeIds();
 }

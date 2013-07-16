@@ -20,24 +20,24 @@ package org.apache.people.mreutegg.jsinfonia.data;
  * the operations are performed on a consistent view of the data.
  * <p/>
  * A transaction is executed against a TransactionContext and
- * the {@link #perform(TransactionManager)} method is called for
+ * the {@link #perform(TransactionContext)} method is called for
  * every attempt to perform the transaction using the provided
- * {@link TransactionManager} to read and write data.
+ * {@link TransactionContext} to read and write data.
  */
 public abstract class Transaction<T> {
 
-	/**
-	 * This method is called to actually perform the operations of
-	 * this transaction. The implementation must only perform
-	 * operations using the given {@link TransactionManager}. After
-	 * this method returns the transaction context will try to commit
-	 * the transaction and return the result. The transaction is
-	 * retried if the operations performed on the transaction context cannot
-	 * be committed.
-	 * 
-	 * @param txContext the transaction context.
-	 * @return the result object.
-	 */
-	public abstract T perform(TransactionContext txContext);
-	
+    /**
+     * This method is called to actually perform the operations of
+     * this transaction. The implementation must only perform
+     * operations using the given {@link TransactionContext}. After
+     * this method returns the transaction manager will try to commit
+     * the transaction and return the result. The transaction is
+     * retried if the operations performed on the transaction context cannot
+     * be committed.
+     *
+     * @param txContext the transaction context.
+     * @return the result object.
+     */
+    public abstract T perform(TransactionContext txContext);
+
 }

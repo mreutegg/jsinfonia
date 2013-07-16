@@ -36,54 +36,54 @@ import junit.framework.TestCase;
 
 public abstract class AbstractTransactionTest extends TestCase {
 
-	protected final File testDir = new File(new File("target"), "memoryNodes");
-	protected ExecutorService executor;
-	protected final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
-	protected MemoryNodeDirectory<? extends MemoryNode> directory;
-	
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-    	if (testDir.exists()) {
-    		delete(testDir);
-    	}
-    	executor = Executors.newCachedThreadPool();
-    	shutdownHooks.clear();
-    	directory = createDirectory();
-	}
-	
-	@Override
-	public void tearDown() throws Exception {
-		if (executor != null) {
-			executor.shutdownNow();
-		}
-		for (Runnable r : shutdownHooks) {
-			r.run();
-		}
-		shutdownHooks.clear();
-    	if (testDir.exists()) {
-    		delete(testDir);
-    	}
-    	directory = null;
-		super.tearDown();
-	}
+    protected final File testDir = new File(new File("target"), "memoryNodes");
+    protected ExecutorService executor;
+    protected final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    protected MemoryNodeDirectory<? extends MemoryNode> directory;
 
-	protected abstract MemoryNodeDirectory<? extends MemoryNode> createDirectory() throws IOException;
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        if (testDir.exists()) {
+            delete(testDir);
+        }
+        executor = Executors.newCachedThreadPool();
+        shutdownHooks.clear();
+        directory = createDirectory();
+    }
 
-	protected TransactionManager createTransactionContext() {
-		return new TransactionManager(new SimpleApplicationNode(
-				directory, executor), new DataItemCache());
-	}
-	
-	protected final MemoryNodeDirectory<? extends MemoryNode> createDirectory(
-			int numNodes, int addressSpace, int itemSize, int bufferSize) throws IOException {
-		SimpleMemoryNodeDirectory<MemoryNode> dir = new SimpleMemoryNodeDirectory<MemoryNode>();
-		for (int i = 0; i < numNodes; i++) {
-			MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
-			dir.addMemoryNode(mn);
-		}
-		return dir;
-	}
+    @Override
+    public void tearDown() throws Exception {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
+        for (Runnable r : shutdownHooks) {
+            r.run();
+        }
+        shutdownHooks.clear();
+        if (testDir.exists()) {
+            delete(testDir);
+        }
+        directory = null;
+        super.tearDown();
+    }
+
+    protected abstract MemoryNodeDirectory<? extends MemoryNode> createDirectory() throws IOException;
+
+    protected TransactionManager createTransactionContext() {
+        return new TransactionManager(new SimpleApplicationNode(
+                directory, executor), new DataItemCache());
+    }
+
+    protected final MemoryNodeDirectory<? extends MemoryNode> createDirectory(
+            int numNodes, int addressSpace, int itemSize, int bufferSize) throws IOException {
+        SimpleMemoryNodeDirectory<MemoryNode> dir = new SimpleMemoryNodeDirectory<MemoryNode>();
+        for (int i = 0; i < numNodes; i++) {
+            MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+            dir.addMemoryNode(mn);
+        }
+        return dir;
+    }
 
     private void delete(File file) {
         File[] files = file.listFiles();
@@ -92,12 +92,12 @@ public abstract class AbstractTransactionTest extends TestCase {
         }
         for (int i = 0; i < 10; i++) {
             if (file.delete()) {
-            	return;
+                return;
             } else {
-            	// file may be memory mapped and can only
-            	// be deleted when the MappedByteBuffer is
-            	// garbage collected. Try some GC cycles.
-            	System.gc();
+                // file may be memory mapped and can only
+                // be deleted when the MappedByteBuffer is
+                // garbage collected. Try some GC cycles.
+                System.gc();
             }
         }
     }

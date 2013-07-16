@@ -19,5 +19,5 @@ import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
 public interface ItemManagerFactory {
 
-	public ItemManager createItemManager(TransactionContext txContext);
+    public ItemManager createItemManager(TransactionContext txContext);
 }

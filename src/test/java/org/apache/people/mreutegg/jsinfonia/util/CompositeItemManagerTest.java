@@ -30,38 +30,38 @@ import org.apache.people.mreutegg.jsinfonia.util.ItemManagerImpl;
 
 public class CompositeItemManagerTest extends ItemManagerTestBase {
 
-	private static final int ADDRESS_SPACE = 1024;
-	
-	private static final int ITEM_SIZE = 1024;
-	
-	private static final int NUM_MEMORY_NODE = 4;
-	
-	@Override
-	protected ItemManager getItemManager(TransactionContext txContext) {
-		Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
-		for (int i = 0; i < NUM_MEMORY_NODE; i++) {
-			itemMgrs.put(i, new ItemManagerImpl(txContext, new ItemReference(i, 0)));
-		}
-		return new CompositeItemManager(itemMgrs);
-	}
+    private static final int ADDRESS_SPACE = 1024;
 
-	@Override
-	protected ItemManager initializeItemManager(TransactionContext txContext) {
-		Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
-		for (int i = 0; i < NUM_MEMORY_NODE; i++) {
-			ItemReference header = ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE);
-			itemMgrs.put(i, new ItemManagerImpl(txContext, header));
-		}
-		return new CompositeItemManager(itemMgrs);
-	}
+    private static final int ITEM_SIZE = 1024;
 
-	@Override
-	protected ApplicationNode createApplicationNode() {
-		SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
-		for (int i = 0; i < NUM_MEMORY_NODE; i++) {
-			directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
-		}
-		return new SimpleApplicationNode(directory, EXECUTOR);
-	}
+    private static final int NUM_MEMORY_NODE = 4;
+
+    @Override
+    protected ItemManager getItemManager(TransactionContext txContext) {
+        Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+        for (int i = 0; i < NUM_MEMORY_NODE; i++) {
+            itemMgrs.put(i, new ItemManagerImpl(txContext, new ItemReference(i, 0)));
+        }
+        return new CompositeItemManager(itemMgrs);
+    }
+
+    @Override
+    protected ItemManager initializeItemManager(TransactionContext txContext) {
+        Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+        for (int i = 0; i < NUM_MEMORY_NODE; i++) {
+            ItemReference header = ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE);
+            itemMgrs.put(i, new ItemManagerImpl(txContext, header));
+        }
+        return new CompositeItemManager(itemMgrs);
+    }
+
+    @Override
+    protected ApplicationNode createApplicationNode() {
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        for (int i = 0; i < NUM_MEMORY_NODE; i++) {
+            directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
+        }
+        return new SimpleApplicationNode(directory, EXECUTOR);
+    }
 
 }

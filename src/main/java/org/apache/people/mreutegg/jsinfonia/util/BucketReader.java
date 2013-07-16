@@ -24,11 +24,11 @@ import java.nio.ByteBuffer;
  */
 public interface BucketReader<E> {
 
-	/**
-	 * Reads entries from the given <code>ByteBuffer</code>.
-	 * 
-	 * @param data the bucket data.
-	 * @return an <code>Iterable</code> over the entries.
-	 */
-	Iterable<E> read(ByteBuffer data);
+    /**
+     * Reads entries from the given <code>ByteBuffer</code>.
+     *
+     * @param data the bucket data.
+     * @return an <code>Iterable</code> over the entries.
+     */
+    Iterable<E> read(ByteBuffer data);
 }

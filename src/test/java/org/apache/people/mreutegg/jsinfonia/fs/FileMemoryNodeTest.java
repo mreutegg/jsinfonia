@@ -32,50 +32,50 @@ import org.junit.Test;
 public class FileMemoryNodeTest extends MemoryNodeTestBase {
 
     @Test
-	public void testSinfoniaFile() throws Exception {
-    	testSinfoniaFile(1, 16 * 1024, 1024, 1024, 256);
+    public void testSinfoniaFile() throws Exception {
+        testSinfoniaFile(1, 16 * 1024, 1024, 1024, 256);
     }
     
     private void testSinfoniaFile(
-    		final int numMemoryNodes,
-    		final int addressSpace,
-    		final int itemSize,
-    		final int bufferSize,
-    		int numThreads) throws Exception {
-    	File testDir = new File(new File("target"), "memoryNodes");
-    	if (testDir.exists()) {
-    		delete(testDir);
-    	}
+            final int numMemoryNodes,
+            final int addressSpace,
+            final int itemSize,
+            final int bufferSize,
+            int numThreads) throws Exception {
+        File testDir = new File(new File("target"), "memoryNodes");
+        if (testDir.exists()) {
+            delete(testDir);
+        }
         SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<FileMemoryNode>();
-    	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
-    	try {
-	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	File memoryNodeDir = new File(testDir, ""+ i);
-	        	if (!memoryNodeDir.mkdirs()) {
-	        		Assert.fail("Unable to create memory node directory: " + memoryNodeDir.getAbsolutePath());
-	        	}
-	        	FileMemoryNode fmn = new FileMemoryNode(i, new File(memoryNodeDir, "data"), 
-    					addressSpace, itemSize, bufferSize);
-	        	directory.addMemoryNode(fmn);
-	        }
-			testSinfonia(directory, addressSpace, itemSize, numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
+        try {
+            for (int i = 0; i < numMemoryNodes; i++) {
+                File memoryNodeDir = new File(testDir, ""+ i);
+                if (!memoryNodeDir.mkdirs()) {
+                    Assert.fail("Unable to create memory node directory: " + memoryNodeDir.getAbsolutePath());
+                }
+                FileMemoryNode fmn = new FileMemoryNode(i, new File(memoryNodeDir, "data"),
+                        addressSpace, itemSize, bufferSize);
+                directory.addMemoryNode(fmn);
+            }
+            testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
-        	Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
-	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	final FileMemoryNode fmn = directory.getMemoryNode(i); 
-	        	closes.add(new Callable<Void>() {
-					@Override
+            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            for (int i = 0; i < numMemoryNodes; i++) {
+                final FileMemoryNode fmn = directory.getMemoryNode(i);
+                closes.add(new Callable<Void>() {
+                    @Override
                     public Void call() throws Exception {
-						fmn.close();
-	                    return null;
+                        fmn.close();
+                        return null;
                     }
-	        	});
-	        }
-        	executor.invokeAll(closes);
-        	executor.shutdown();
-        	executor.awaitTermination(60, TimeUnit.SECONDS);
-        	directory = null;
-	        delete(testDir);
+                });
+            }
+            executor.invokeAll(closes);
+            executor.shutdown();
+            executor.awaitTermination(60, TimeUnit.SECONDS);
+            directory = null;
+            delete(testDir);
         }
     }
 }

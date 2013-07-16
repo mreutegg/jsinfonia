@@ -19,8 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Locks {
-	
-	public final Set<Integer> readSet = new HashSet<Integer>();
-	
-	public final Set<Integer> writeSet = new HashSet<Integer>();
+
+    public final Set<Integer> readSet = new HashSet<Integer>();
+
+    public final Set<Integer> writeSet = new HashSet<Integer>();
 }

@@ -39,116 +39,116 @@ import org.junit.Test;
 public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
 
     @Test
-	public void testSinfoniaThrift() throws Exception {
-    	int addressSpace = 64 * 1024;
-    	int numMemoryNodes = 2;
-    	for (int i = 0; i < 3; i++) {
-    		testSinfoniaThrift(numMemoryNodes, addressSpace / numMemoryNodes,
-    				1024, 1024, numMemoryNodes, true);
-    		numMemoryNodes *= 2;
-    	}
+    public void testSinfoniaThrift() throws Exception {
+        int addressSpace = 64 * 1024;
+        int numMemoryNodes = 2;
+        for (int i = 0; i < 3; i++) {
+            testSinfoniaThrift(numMemoryNodes, addressSpace / numMemoryNodes,
+                    1024, 1024, numMemoryNodes, true);
+            numMemoryNodes *= 2;
+        }
     }
     
     @Test
     public void testApplicationNodeThrift() throws Exception {
-    	testApplicationNodeThrift(4, 16 * 1024, 1024, 1024, 4, true);
+        testApplicationNodeThrift(4, 16 * 1024, 1024, 1024, 4, true);
     }
     
     private void testSinfoniaThrift(
-    		final int numMemoryNodes,
-    		final int addressSpace,
-    		final int itemSize,
-    		final int bufferSize,
-    		final int numThreads,
-    		final boolean nonBlocking) throws Exception {
-    	final List<MemoryNode> memoryNodes = new ArrayList<MemoryNode>();
-    	final List<MemoryNodeServer> servers = new ArrayList<MemoryNodeServer>();
+            final int numMemoryNodes,
+            final int addressSpace,
+            final int itemSize,
+            final int bufferSize,
+            final int numThreads,
+            final boolean nonBlocking) throws Exception {
+        final List<MemoryNode> memoryNodes = new ArrayList<MemoryNode>();
+        final List<MemoryNodeServer> servers = new ArrayList<MemoryNodeServer>();
         final SimpleMemoryNodeDirectory<MemoryNodeClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeClient>();
-    	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
-    	try {
-	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
-	        	memoryNodes.add(mn);
-	        	MemoryNodeServer server = new MemoryNodeServer(mn, 0, nonBlocking);
-	        	server.start();
-	        	servers.add(server);
-	        	directory.addMemoryNode(new MemoryNodeClient("localhost", server.getPort(), numThreads, nonBlocking));
-	        }
-	        testSinfonia(directory, addressSpace, itemSize, numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
+        try {
+            for (int i = 0; i < numMemoryNodes; i++) {
+                MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+                memoryNodes.add(mn);
+                MemoryNodeServer server = new MemoryNodeServer(mn, 0, nonBlocking);
+                server.start();
+                servers.add(server);
+                directory.addMemoryNode(new MemoryNodeClient("localhost", server.getPort(), numThreads, nonBlocking));
+            }
+            testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
-        	Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
-	        for (int i = 0; i < directory.getMemoryNodeIds().size(); i++) {
-	        	final MemoryNodeClient client = directory.getMemoryNode(i); 
-	        	closes.add(new Callable<Void>() {
-					@Override
+            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            for (int i = 0; i < directory.getMemoryNodeIds().size(); i++) {
+                final MemoryNodeClient client = directory.getMemoryNode(i);
+                closes.add(new Callable<Void>() {
+                    @Override
                     public Void call() throws Exception {
-						client.close();
-	                    return null;
+                        client.close();
+                        return null;
                     }
-	        	});
-	        }
-        	for (final MemoryNodeServer server : servers) {
-            	closes.add(new Callable<Void>() {
-    				@Override
-    				public Void call() throws Exception {
-    					server.stop();
-    					return null;
-    				}
-    			});
-        	}
-        	executor.invokeAll(closes);
-        	executor.shutdown();
-        	executor.awaitTermination(60, TimeUnit.SECONDS);
+                });
+            }
+            for (final MemoryNodeServer server : servers) {
+                closes.add(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        server.stop();
+                        return null;
+                    }
+                });
+            }
+            executor.invokeAll(closes);
+            executor.shutdown();
+            executor.awaitTermination(60, TimeUnit.SECONDS);
         }
     }
 
     private void testApplicationNodeThrift(
-    		final int numMemoryNodes,
-    		final int addressSpace,
-    		final int itemSize,
-    		final int bufferSize,
-    		final int numThreads,
-    		final boolean nonBlocking) throws Exception {
+            final int numMemoryNodes,
+            final int addressSpace,
+            final int itemSize,
+            final int bufferSize,
+            final int numThreads,
+            final boolean nonBlocking) throws Exception {
         final SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
-    	ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
-    	ApplicationNodeServer appNodeServer = null;
-    	try {
-	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
-	        	directory.addMemoryNode(mn);
-	        }
-	        ApplicationNode appNode = new SimpleApplicationNode(directory, executor);
-	        appNodeServer = new ApplicationNodeServer(appNode, 0, nonBlocking);
-	        appNodeServer.start();
-	        ApplicationNodeClient appClient = new ApplicationNodeClient(
-	        		"localhost", appNodeServer.getPort(), numThreads, nonBlocking);
-	        testSinfonia(appClient, addressSpace, itemSize, numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
+        ApplicationNodeServer appNodeServer = null;
+        try {
+            for (int i = 0; i < numMemoryNodes; i++) {
+                MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
+                directory.addMemoryNode(mn);
+            }
+            ApplicationNode appNode = new SimpleApplicationNode(directory, executor);
+            appNodeServer = new ApplicationNodeServer(appNode, 0, nonBlocking);
+            appNodeServer.start();
+            ApplicationNodeClient appClient = new ApplicationNodeClient(
+                    "localhost", appNodeServer.getPort(), numThreads, nonBlocking);
+            testSinfonia(appClient, addressSpace, itemSize, numThreads);
         } finally {
-        	Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
-        	if (appNodeServer != null) {
-        		final ApplicationNodeServer ans = appNodeServer;
-        		closes.add(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						ans.stop();
-						return null;
-					}
-        		});
-        	}
-	        for (int i = 0; i < numMemoryNodes; i++) {
-	        	final MemoryNode mn = directory.getMemoryNode(i); 
-	        	closes.add(new Callable<Void>() {
-					@Override
+            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            if (appNodeServer != null) {
+                final ApplicationNodeServer ans = appNodeServer;
+                closes.add(new Callable<Void>() {
+                    @Override
                     public Void call() throws Exception {
-						if (mn instanceof Closeable) {
-							((Closeable) mn).close();
-						}
-	                    return null;
+                        ans.stop();
+                        return null;
                     }
-	        	});
-	        }
-        	executor.invokeAll(closes);
-        	executor.shutdownNow();
+                });
+            }
+            for (int i = 0; i < numMemoryNodes; i++) {
+                final MemoryNode mn = directory.getMemoryNode(i);
+                closes.add(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        if (mn instanceof Closeable) {
+                            ((Closeable) mn).close();
+                        }
+                        return null;
+                    }
+                });
+            }
+            executor.invokeAll(closes);
+            executor.shutdownNow();
         }
     }
 }

@@ -21,22 +21,22 @@ import java.util.Set;
 
 public class SimpleMemoryNodeDirectory<T extends MemoryNode> implements MemoryNodeDirectory<T> {
 
-	private final Map<Integer, T> directory = new HashMap<Integer, T>();
-	
-	public SimpleMemoryNodeDirectory() {
-	}
-	
-	public void addMemoryNode(T node) {
-		directory.put(node.getInfo().getId(), node);
-	}
-	
-	@Override
-	public T getMemoryNode(int id) {
-		return directory.get(id);
-	}
+    private final Map<Integer, T> directory = new HashMap<Integer, T>();
 
-	@Override
+    public SimpleMemoryNodeDirectory() {
+    }
+
+    public void addMemoryNode(T node) {
+        directory.put(node.getInfo().getId(), node);
+    }
+
+    @Override
+    public T getMemoryNode(int id) {
+        return directory.get(id);
+    }
+
+    @Override
     public Set<Integer> getMemoryNodeIds() {
-		return directory.keySet();
+        return directory.keySet();
     }
 }

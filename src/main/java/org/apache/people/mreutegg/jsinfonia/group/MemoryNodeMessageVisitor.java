@@ -19,9 +19,9 @@ import java.io.IOException;
 
 public interface MemoryNodeMessageVisitor {
 
-	public void visit(CommitMessage msg) throws IOException;
-	
-	public void visit(ExecuteAndPrepareMessage msg) throws IOException;
-	
-	public void visit(ResultMessage msg) throws IOException;
+    public void visit(CommitMessage msg) throws IOException;
+
+    public void visit(ExecuteAndPrepareMessage msg) throws IOException;
+
+    public void visit(ResultMessage msg) throws IOException;
 }

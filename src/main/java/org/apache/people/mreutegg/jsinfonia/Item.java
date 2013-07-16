@@ -19,58 +19,58 @@ import java.nio.ByteBuffer;
 
 public class Item {
 
-	private final int memoryNodeId;
-	
-	private final int address;
-	
-	private final int offset;
-	
-	private final ByteBuffer data;
-	
-	public Item(MemoryNodeInfo info, int address) {
-		this(info.getId(), address, 0, new byte[info.getItemSize()]);
-		if (address >= info.getAddressSpace()) {
-			throw new IllegalArgumentException("Address: " + address + 
-					", AddressSpace: " + info.getAddressSpace());
-		}
-	}
-	
-	public Item(ItemReference itemRef, int offset, byte[] data) {
-		this(itemRef.getMemoryNodeId(), itemRef.getAddress(), offset, ByteBuffer.wrap(data));
-	}
-	
-	public Item(int memoryNodeId, int address, int offset, byte[] data) {
-		this(memoryNodeId, address, offset, ByteBuffer.wrap(data));
-	}
+    private final int memoryNodeId;
 
-	public Item(ItemReference itemRef, int offset, ByteBuffer data) {
-		this(itemRef.getMemoryNodeId(), itemRef.getAddress(), offset, data);
-	}
+    private final int address;
 
-	public Item(int memoryNodeId, int address, int offset, ByteBuffer data) {
-		this.memoryNodeId = memoryNodeId;
-		this.address = address;
-		this.offset = offset;
-		this.data = data.duplicate();
-	}
-	
-	public int getMemoryNodeId() {
-		return memoryNodeId;
-	}
+    private final int offset;
 
-	public ByteBuffer getData() {
-		return data.duplicate();
-	}
-	
-	public int getAddress() {
-		return address;
-	}
+    private final ByteBuffer data;
 
-	public int getOffset() {
-		return offset;
-	}
-	
-	public ItemReference getReference() {
-		return new ItemReference(memoryNodeId, address);
-	}
+    public Item(MemoryNodeInfo info, int address) {
+        this(info.getId(), address, 0, new byte[info.getItemSize()]);
+        if (address >= info.getAddressSpace()) {
+            throw new IllegalArgumentException("Address: " + address +
+                    ", AddressSpace: " + info.getAddressSpace());
+        }
+    }
+
+    public Item(ItemReference itemRef, int offset, byte[] data) {
+        this(itemRef.getMemoryNodeId(), itemRef.getAddress(), offset, ByteBuffer.wrap(data));
+    }
+
+    public Item(int memoryNodeId, int address, int offset, byte[] data) {
+        this(memoryNodeId, address, offset, ByteBuffer.wrap(data));
+    }
+
+    public Item(ItemReference itemRef, int offset, ByteBuffer data) {
+        this(itemRef.getMemoryNodeId(), itemRef.getAddress(), offset, data);
+    }
+
+    public Item(int memoryNodeId, int address, int offset, ByteBuffer data) {
+        this.memoryNodeId = memoryNodeId;
+        this.address = address;
+        this.offset = offset;
+        this.data = data.duplicate();
+    }
+
+    public int getMemoryNodeId() {
+        return memoryNodeId;
+    }
+
+    public ByteBuffer getData() {
+        return data.duplicate();
+    }
+
+    public int getAddress() {
+        return address;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public ItemReference getReference() {
+        return new ItemReference(memoryNodeId, address);
+    }
 }

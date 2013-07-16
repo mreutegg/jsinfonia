@@ -21,24 +21,24 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class CachedItem {
 
-	private final ByteBuffer data;
-	
-	private final Lock lock = new ReentrantLock();
-	
-	public CachedItem(ByteBuffer data) {
-		data.rewind();
-		this.data = data;
-	}
-	
-	public void lock() {
-		lock.lock();
-	}
-	
-	public void unlock() {
-		lock.unlock();
-	}
-	
-	public ByteBuffer asByteBuffer() {
-		return data.duplicate();
-	}
+    private final ByteBuffer data;
+
+    private final Lock lock = new ReentrantLock();
+
+    public CachedItem(ByteBuffer data) {
+        data.rewind();
+        this.data = data;
+    }
+
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
+    }
+
+    public ByteBuffer asByteBuffer() {
+        return data.duplicate();
+    }
 }
