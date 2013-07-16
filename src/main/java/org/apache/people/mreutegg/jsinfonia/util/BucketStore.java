@@ -38,14 +38,14 @@ public interface BucketStore<K, V> {
 	
 	public int getSize();
 	
-	public List<Bucket<K, V>> getBucketList();
+	public List<MapBucket<K, V>> getBucketList();
 	
 	/**
 	 * Allocates / creates a new bucket.
 	 * 
 	 * @return a new bucket
 	 */
-	public Bucket<K, V> createBucket();
+	public MapBucket<K, V> createBucket();
 
 	/**
 	 * Gets an existing bucket.
@@ -55,7 +55,7 @@ public interface BucketStore<K, V> {
 	 * @return the bucket with the id or null if there is no existing bucket
 	 *         with the given id.
 	 */
-	public Bucket<K, V> getBucket(BucketId id);
+	public MapBucket<K, V> getBucket(BucketId id);
 
 	/**
 	 * Disposes the bucket with the given id.

@@ -97,7 +97,7 @@ public class SinfoniaBucketStore<K, V>
 	private final BucketReader<Entry<K, V>> reader;
 	private final BucketWriter<Entry<K, V>> writer;
 
-	private final List<Bucket<K, V>> buckets = new BucketList();
+	private final List<MapBucket<K, V>> buckets = new BucketList();
 	
 	public SinfoniaBucketStore(ItemManager itemMgr, TransactionContext txContext,
 			ItemReference headerRef, BucketReader<Entry<K, V>> reader, BucketWriter<Entry<K, V>> writer) {
@@ -179,24 +179,24 @@ public class SinfoniaBucketStore<K, V>
 	@Override
 	public int getSize() {
 		int size = 0;
-		for (Bucket<K, V> b : buckets) {
+		for (MapBucket<K, V> b : buckets) {
 			size += b.getSize();
 		}
 		return size;
 	}
 
 	@Override
-	public List<Bucket<K, V>> getBucketList() {
+	public List<MapBucket<K, V>> getBucketList() {
 		return buckets;
 	}
 
 	@Override
-    public Bucket<K, V> createBucket() {
+    public MapBucket<K, V> createBucket() {
 		return createBucketInternal();
     }
 
 	@Override
-    public Bucket<K, V> getBucket(BucketId id) {
+    public MapBucket<K, V> getBucket(BucketId id) {
 		if (!(id instanceof SinfoniaBucketId)) {
 			throw new IllegalArgumentException("id is not a " + SinfoniaBucketId.class.getSimpleName());
 		}
@@ -311,16 +311,16 @@ public class SinfoniaBucketStore<K, V>
 
 	//---------------------------< SinfoniaBucket >----------------------------
 	
-	private class BucketList extends AbstractList<Bucket<K, V>> {
+	private class BucketList extends AbstractList<MapBucket<K, V>> {
 
 		@Override
-		public Bucket<K, V> get(final int index) {
+		public MapBucket<K, V> get(final int index) {
 			if (index < 0) {
 				throw new ArrayIndexOutOfBoundsException(index);
 			}
-			Bucket<K, V> bucket = txContext.read(headerRef, new DataOperation<Bucket<K, V>>() {
+			MapBucket<K, V> bucket = txContext.read(headerRef, new DataOperation<MapBucket<K, V>>() {
 				@Override
-				public Bucket<K, V> perform(ByteBuffer data) {
+				public MapBucket<K, V> perform(ByteBuffer data) {
 					int sumDirs = 0;
 					char numDirs = data.getChar(HEADER_OFFSET_NUM_DIRS);
 					for (char i = 0; i < numDirs; i++) {
@@ -357,7 +357,7 @@ public class SinfoniaBucketStore<K, V>
 		}
 
 		@Override
-		public boolean add(Bucket<K, V> e) {
+		public boolean add(MapBucket<K, V> e) {
 			if (e.getClass() != SinfoniaBucket.class) {
 				throw new IllegalArgumentException("Bucket must be of type " + 
 						SinfoniaBucket.class.getSimpleName());
@@ -400,7 +400,7 @@ public class SinfoniaBucketStore<K, V>
 	 * the overflowed entries. An <code>ItemReference</code> with a memoryNodeId
 	 * of <code>0xFFFFFFFF</code> indicates that there is no linked bucket.
 	 */
-	private class SinfoniaBucket implements Bucket<K, V> {
+	private class SinfoniaBucket implements MapBucket<K, V> {
 
 		private static final int NO_NEXT_MARKER = 0xFFFFFFFF;
 		
@@ -596,10 +596,10 @@ public class SinfoniaBucketStore<K, V>
 			this.itemRef = itemRef;
 		}
 		
-		Bucket<K, V> getBucket(final int index) {
-			Bucket<K, V> bucket = txContext.read(itemRef, new DataOperation<Bucket<K, V>>() {
+		MapBucket<K, V> getBucket(final int index) {
+			MapBucket<K, V> bucket = txContext.read(itemRef, new DataOperation<MapBucket<K, V>>() {
 				@Override
-				public Bucket<K, V> perform(ByteBuffer data) {
+				public MapBucket<K, V> perform(ByteBuffer data) {
 					char numRefs = data.getChar(OFFSET_NUM_REFS);
 					if (index < numRefs) {
 						data.position(META_LENGTH + index * 8);

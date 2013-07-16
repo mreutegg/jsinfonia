@@ -54,7 +54,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
 		if (key == null) {
 			throw new NullPointerException("key must not be null");
 		}
-		Bucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
+		MapBucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
 		V retVal = b.put(key, value);
 		if (b.isOverflowed()) {
 			// add bucket and redistribute at p
@@ -76,13 +76,13 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
 	
 	@Override
     public V remove(Object key) {
-		Bucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
+		MapBucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
 		return b.remove(key);
     }
 
 	@Override
     public V get(Object key) {
-		Bucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
+		MapBucket<K, V> b = bucketStore.getBucketList().get(getBucketIndex(key));
 		return b.get(key);
     }
 	
@@ -120,7 +120,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
 
 				private int bucketIndex = 0;
 				
-				private Bucket<K, V> currentBucket = bucketStore.getBucketList().get(bucketIndex);
+				private MapBucket<K, V> currentBucket = bucketStore.getBucketList().get(bucketIndex);
 				
 				private Iterator<K> currentIterator =
 						currentBucket.getKeys().iterator();

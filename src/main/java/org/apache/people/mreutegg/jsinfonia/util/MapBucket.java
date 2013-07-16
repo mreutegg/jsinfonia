@@ -17,7 +17,7 @@ package org.apache.people.mreutegg.jsinfonia.util;
 
 import java.util.Map;
 
-interface Bucket<K, V> {
+interface MapBucket<K, V> {
 
 	/**
 	 * Returns the value for the given <code>key</code> or <code>null</code> if
