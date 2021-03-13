@@ -23,9 +23,6 @@ public class SimpleMemoryNodeDirectory<T extends MemoryNode> implements MemoryNo
 
     private final Map<Integer, T> directory = new HashMap<>();
 
-    public SimpleMemoryNodeDirectory() {
-    }
-
     public void addMemoryNode(T node) {
         directory.put(node.getInfo().getId(), node);
     }
