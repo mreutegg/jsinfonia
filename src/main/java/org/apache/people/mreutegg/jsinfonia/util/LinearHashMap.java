@@ -104,7 +104,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
     //----------------------------< internal >---------------------------------
 
     private int getBucketIndex(Object key) {
-        int h = Math.abs(key.hashCode());
+        int h = Math.abs(key.hashCode() / 2);
         int idx = h % (bucketStore.getInitialNumberOfBuckets() << bucketStore.getLevel());
         if (idx < bucketStore.getSplitIndex()) {
             idx = h % (bucketStore.getInitialNumberOfBuckets() << (bucketStore.getLevel() + 1));
