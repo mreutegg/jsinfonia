@@ -98,8 +98,7 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
 
     //------------------------< FileMemoryNode >-------------------------------
 
-    void applyWrite(ByteBuffer data, int address)
-            throws IOException {
+    void applyWrite(ByteBuffer data, int address) {
         ByteBuffer dest = mappedBuffer.duplicate();
         dest.position(address * getInfo().getItemSize());
         dest.put(data);
@@ -110,7 +109,7 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
         itemBuffer.applyWrite(data, address, offset, count);
     }
 
-    public void sync() throws IOException {
+    public void sync() {
         long time = System.currentTimeMillis();
         this.mappedBuffer.force();
         time = System.currentTimeMillis() - time;
