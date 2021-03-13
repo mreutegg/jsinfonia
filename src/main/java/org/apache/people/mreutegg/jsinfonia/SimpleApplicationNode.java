@@ -59,7 +59,7 @@ public class SimpleApplicationNode implements ApplicationNode {
 
     @Override
     public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
-        Map<Integer, MemoryNodeInfo> infos = new HashMap<Integer, MemoryNodeInfo>();
+        Map<Integer, MemoryNodeInfo> infos = new HashMap<>();
         for (int id : directory.getMemoryNodeIds()) {
             MemoryNode memoryNode = directory.getMemoryNode(id);
             infos.put(id, memoryNode.getInfo());
@@ -73,7 +73,7 @@ public class SimpleApplicationNode implements ApplicationNode {
     @Override
     public Response executeTransaction(final MiniTransaction tx) {
         final Set<Integer> memoryNodeIds = tx.getMemoryNodeIds();
-        List<Callable<Result>> callables = new ArrayList<Callable<Result>>();
+        List<Callable<Result>> callables = new ArrayList<>();
         for (final Integer memoryNodeId : memoryNodeIds) {
             final MiniTransaction mt = tx.getTransactionForMemoryNode(memoryNodeId);
             callables.add(new Callable<Result>() {

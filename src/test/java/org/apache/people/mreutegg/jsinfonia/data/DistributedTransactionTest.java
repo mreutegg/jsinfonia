@@ -48,7 +48,7 @@ public class DistributedTransactionTest extends AbstractTransactionTest {
     public void testTransaction() throws Exception {
         initData();
         List<Integer> results = Collections.synchronizedList(new ArrayList<Integer>());
-        List<Thread> workers = new ArrayList<Thread>();
+        List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < NUM_WORKERS; i++) {
             workers.add(new Thread(new Worker(createTransactionContext(), results)));
         }

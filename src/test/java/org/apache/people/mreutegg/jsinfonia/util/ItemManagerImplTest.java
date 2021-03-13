@@ -37,7 +37,7 @@ public class ItemManagerImplTest extends ItemManagerTestBase {
 
     @Override
     protected ApplicationNode createApplicationNode() {
-        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         directory.addMemoryNode(new InMemoryMemoryNode(0, ADDRESS_SPACE, ITEM_SIZE));
         return new SimpleApplicationNode(directory, EXECUTOR);
     }

@@ -51,7 +51,7 @@ class InMemoryRedoLog implements RedoLog {
 
     @Override
     public Set<String> getTransactionIDs() {
-        Set<String> txIds = new HashSet<String>();
+        Set<String> txIds = new HashSet<>();
         synchronized (loggedTransactions) {
             for (String txId : loggedTransactions.keySet()) {
                 txIds.add(txId);

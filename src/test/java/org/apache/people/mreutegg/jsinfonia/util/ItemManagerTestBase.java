@@ -62,7 +62,7 @@ public abstract class ItemManagerTestBase extends TestCase {
             @Override
             public List<ItemReference> perform(TransactionContext txContext) {
                 ItemManager itemManager = getItemManager(txContext);
-                List<ItemReference> refs = new ArrayList<ItemReference>();
+                List<ItemReference> refs = new ArrayList<>();
                 ItemReference ref;
                 while ((ref = itemManager.alloc()) != null) {
                     refs.add(ref);
@@ -84,7 +84,7 @@ public abstract class ItemManagerTestBase extends TestCase {
         });
 
         final List<Integer> allocs = Collections.synchronizedList(new ArrayList<Integer>());
-        List<Thread> workers = new ArrayList<Thread>();
+        List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             workers.add(new Thread(new Runnable() {
                 @Override

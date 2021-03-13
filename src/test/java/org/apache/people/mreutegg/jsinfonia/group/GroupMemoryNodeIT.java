@@ -42,8 +42,8 @@ public class GroupMemoryNodeIT extends MemoryNodeTestBase {
             final int addressSpace,
             final int itemSize,
             final int numThreads) throws Exception {
-        List<MemoryNodeGroupMember> members = new ArrayList<MemoryNodeGroupMember>();
-        SimpleMemoryNodeDirectory<MemoryNodeGroupClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeGroupClient>();
+        List<MemoryNodeGroupMember> members = new ArrayList<>();
+        SimpleMemoryNodeDirectory<MemoryNodeGroupClient> directory = new SimpleMemoryNodeDirectory<>();
         for (int i = 0; i < numMemoryNodes; i++) {
             for (int j = 0; j < numReplicas; j++) {
                 MemoryNode memoryNode = new InMemoryMemoryNode(i, addressSpace, itemSize);

@@ -29,7 +29,7 @@ public class Result {
 
     public static final Result BAD_LOCK = new Result(Vote.BAD_LOCK);
 
-    private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+    private final Set<ItemReference> failedCompares = new HashSet<>();
 
     private final Vote vote;
 

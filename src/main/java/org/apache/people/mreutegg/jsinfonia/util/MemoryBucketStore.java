@@ -28,7 +28,7 @@ public class MemoryBucketStore<K, V> implements BucketStore<K, V> {
      */
     private static final int INITIAL_BUCKET_SIZE = 4;
 
-    private final Map<BucketId, MapBucket<K, V>> store = new IdentityHashMap<BucketId, MapBucket<K,V>>();
+    private final Map<BucketId, MapBucket<K, V>> store = new IdentityHashMap<>();
 
     private final int entriesPerBucket;
 
@@ -50,7 +50,7 @@ public class MemoryBucketStore<K, V> implements BucketStore<K, V> {
     /**
      * The primary buckets list
      */
-    private final List<MapBucket<K, V>> buckets = new ArrayList<MapBucket<K, V>>();
+    private final List<MapBucket<K, V>> buckets = new ArrayList<>();
 
     public MemoryBucketStore(int entriesPerBucket) {
         this.entriesPerBucket = entriesPerBucket;
@@ -132,7 +132,7 @@ public class MemoryBucketStore<K, V> implements BucketStore<K, V> {
 
     private class MemoryBucket implements MapBucket<K, V>, BucketId  {
 
-        private final Map<K, V> entries = new HashMap<K, V>();
+        private final Map<K, V> entries = new HashMap<>();
 
         @Override
         public BucketId getId() {

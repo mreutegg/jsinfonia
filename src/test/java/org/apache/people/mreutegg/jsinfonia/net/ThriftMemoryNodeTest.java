@@ -61,9 +61,9 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
             final int bufferSize,
             final int numThreads,
             final boolean nonBlocking) throws Exception {
-        final List<MemoryNode> memoryNodes = new ArrayList<MemoryNode>();
-        final List<MemoryNodeServer> servers = new ArrayList<MemoryNodeServer>();
-        final SimpleMemoryNodeDirectory<MemoryNodeClient> directory = new SimpleMemoryNodeDirectory<MemoryNodeClient>();
+        final List<MemoryNode> memoryNodes = new ArrayList<>();
+        final List<MemoryNodeServer> servers = new ArrayList<>();
+        final SimpleMemoryNodeDirectory<MemoryNodeClient> directory = new SimpleMemoryNodeDirectory<>();
         ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
         try {
             for (int i = 0; i < numMemoryNodes; i++) {
@@ -76,7 +76,7 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
             }
             testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
-            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            Collection<Callable<Void>> closes = new ArrayList<>();
             for (int i = 0; i < directory.getMemoryNodeIds().size(); i++) {
                 final MemoryNodeClient client = directory.getMemoryNode(i);
                 closes.add(new Callable<Void>() {
@@ -109,7 +109,7 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
             final int bufferSize,
             final int numThreads,
             final boolean nonBlocking) throws Exception {
-        final SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
+        final SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
         ApplicationNodeServer appNodeServer = null;
         try {
@@ -124,7 +124,7 @@ public class ThriftMemoryNodeTest extends MemoryNodeTestBase {
                     "localhost", appNodeServer.getPort(), numThreads, nonBlocking);
             testSinfonia(appClient, addressSpace, itemSize, numThreads);
         } finally {
-            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            Collection<Callable<Void>> closes = new ArrayList<>();
             if (appNodeServer != null) {
                 final ApplicationNodeServer ans = appNodeServer;
                 closes.add(new Callable<Void>() {

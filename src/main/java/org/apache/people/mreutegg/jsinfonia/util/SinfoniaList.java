@@ -105,7 +105,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
                 return null;
             }
         });
-        return new SinfoniaList<E>(
+        return new SinfoniaList<>(
                 headerRef, txContext, factory, reader, writer);
     }
 

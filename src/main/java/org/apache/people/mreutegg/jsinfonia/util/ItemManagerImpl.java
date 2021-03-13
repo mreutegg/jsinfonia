@@ -87,7 +87,7 @@ public class ItemManagerImpl implements ItemManager {
         }
         // cap at maximum number of item references the header can store
         dataItems = Math.min(dataItems, (itemSize - 8) / 12);
-        List<ItemReference> dataItemRefs = new ArrayList<ItemReference>();
+        List<ItemReference> dataItemRefs = new ArrayList<>();
         for (int i = 0; i < dataItems; i++) {
             dataItemRefs.add(new ItemReference(memoryNodeId, i + 1));
         }

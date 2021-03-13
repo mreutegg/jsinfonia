@@ -59,7 +59,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
         if (b.isOverflowed()) {
             // add bucket and redistribute at p
             b = bucketStore.getBucketList().get(bucketStore.getSplitIndex());
-            Map<K, V> redistribute = new HashMap<K, V>();
+            Map<K, V> redistribute = new HashMap<>();
             b.transferTo(redistribute);
             bucketStore.getBucketList().add(bucketStore.createBucket());
             if (bucketStore.incrementAndGetSplitIndex() >= (bucketStore.getInitialNumberOfBuckets() << bucketStore.getLevel())) {

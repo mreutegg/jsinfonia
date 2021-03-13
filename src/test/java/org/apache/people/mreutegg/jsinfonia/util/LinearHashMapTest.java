@@ -89,7 +89,7 @@ public class LinearHashMapTest extends TestCase {
     }
 
     public void testMap() {
-        Map<Integer, Integer> map = new LinearHashMap<Integer, Integer>(20);
+        Map<Integer, Integer> map = new LinearHashMap<>(20);
         System.out.println(map);
 
         for (int j = 0; j < 100; j++) {
@@ -147,7 +147,7 @@ public class LinearHashMapTest extends TestCase {
         final ApplicationNode appNode = getApplicationNode();
         initializeSinfoniaHashMap();
         final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
-        List<Thread> workers = new ArrayList<Thread>();
+        List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < numThreads; i++) {
             workers.add(new Thread(new Runnable() {
                 @Override
@@ -158,7 +158,7 @@ public class LinearHashMapTest extends TestCase {
                         SinfoniaHashMap<Integer, Integer> map = createSinfoniaHashMap(
                                 txManager, hashMapHeaderRef);
                         Random random = new Random(Thread.currentThread().hashCode());
-                        Map<Integer, Integer> tmp = new HashMap<Integer, Integer>();
+                        Map<Integer, Integer> tmp = new HashMap<>();
                         for (int i = 0; i < numPuts / numThreads; i++) {
                             if (i % 1000 == 0) {
                                 // put in batches if putAll == true
@@ -217,7 +217,7 @@ public class LinearHashMapTest extends TestCase {
         final List<ItemReference> itemMgrHeaderRefs = txManager.execute(new Transaction<List<ItemReference>>() {
             @Override
             public List<ItemReference> perform(TransactionContext txContext) {
-                List<ItemReference> headerRefs = new ArrayList<ItemReference>();
+                List<ItemReference> headerRefs = new ArrayList<>();
                 for (int i = 0; i < numMemoryNodes; i++) {
                     headerRefs.add(ItemManagerImpl.initialize(txContext, i, addressSpace));
                 }
@@ -228,7 +228,7 @@ public class LinearHashMapTest extends TestCase {
         hashMapHeaderRef = txManager.execute(new Transaction<ItemReference>() {
             @Override
             public ItemReference perform(TransactionContext txContext) {
-                Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+                Map<Integer, ItemManager> itemMgrs = new HashMap<>();
                 for (ItemReference r : itemMgrHeaderRefs) {
                     itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
                 }
@@ -241,11 +241,11 @@ public class LinearHashMapTest extends TestCase {
 
     private SinfoniaHashMap<Integer, Integer> createSinfoniaHashMap(
             TransactionManager txManager, ItemReference headerRef) {
-        return new SinfoniaHashMap<Integer, Integer>(txManager,
+        return new SinfoniaHashMap<>(txManager,
                 new ItemManagerFactory() {
                     @Override
                     public ItemManager createItemManager(TransactionContext txContext) {
-                        Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+                        Map<Integer, ItemManager> itemMgrs = new HashMap<>();
                         for (int i = 0; i < numMemoryNodes; i++) {
                             ItemReference headerRef = new ItemReference(i, 0);
                             itemMgrs.put(i, new ItemManagerImpl(txContext, headerRef));
@@ -258,7 +258,7 @@ public class LinearHashMapTest extends TestCase {
                     @Override
                     public Iterable<Entry<Integer, Integer>> read(
                             ByteBuffer data) {
-                        Map<Integer, Integer> entries = new HashMap<Integer, Integer>();
+                        Map<Integer, Integer> entries = new HashMap<>();
                         char num = data.getChar();
                         for (int i = 0; i < num; i++) {
                             entries.put(data.getInt(), data.getInt());
@@ -269,7 +269,7 @@ public class LinearHashMapTest extends TestCase {
                 new BucketWriter<Entry<Integer, Integer>>() {
                     @Override
                     public int write(Iterable<Entry<Integer, Integer>> entries,
-                            ByteBuffer data) {
+                                     ByteBuffer data) {
                         char num = 0;
                         data.putChar(num);
                         try {
@@ -292,7 +292,7 @@ public class LinearHashMapTest extends TestCase {
             if (testDir.exists()) {
                 delete(testDir);
             }
-            SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
+            SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
             for (int i = 0; i < numMemoryNodes; i++) {
                 if (useFileMemoryNode) {
                     File memoryNodeDir = new File(testDir, ""+ i);

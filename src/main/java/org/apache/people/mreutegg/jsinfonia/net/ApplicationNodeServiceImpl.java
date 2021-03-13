@@ -40,7 +40,7 @@ public class ApplicationNodeServiceImpl implements ApplicationNodeService.Iface 
 
     @Override
     public List<TMemoryNodeInfo> getMemoryNodeInfos() throws TException {
-        List<TMemoryNodeInfo> infos = new ArrayList<TMemoryNodeInfo>();
+        List<TMemoryNodeInfo> infos = new ArrayList<>();
         for (MemoryNodeInfo mni : appNode.getMemoryNodeInfos().values()) {
             TMemoryNodeInfo info = new TMemoryNodeInfo();
             info.setId(mni.getId());

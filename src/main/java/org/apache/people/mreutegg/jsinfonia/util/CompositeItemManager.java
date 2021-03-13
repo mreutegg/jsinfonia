@@ -29,7 +29,7 @@ import org.apache.people.mreutegg.jsinfonia.ItemReference;
  */
 public class CompositeItemManager implements ItemManager {
 
-    private final Map<Integer, ItemManager> itemManagers = new HashMap<Integer, ItemManager>();
+    private final Map<Integer, ItemManager> itemManagers = new HashMap<>();
 
     private final Random random = new Random(0);
 
@@ -39,8 +39,7 @@ public class CompositeItemManager implements ItemManager {
 
     @Override
     public ItemReference alloc() {
-        List<Integer> memoryNodeIds = new ArrayList<Integer>();
-        memoryNodeIds.addAll(itemManagers.keySet());
+        List<Integer> memoryNodeIds = new ArrayList<>(itemManagers.keySet());
         while (!memoryNodeIds.isEmpty()) {
             int idx = random.nextInt(memoryNodeIds.size());
             Integer memoryNodeId = memoryNodeIds.get(idx);

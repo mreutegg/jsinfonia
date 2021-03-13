@@ -76,7 +76,7 @@ public class FileRedoLog implements RedoLog, Closeable {
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     private final BlockingQueue<SettableFuture<Boolean>> syncQueue
-                        = new LinkedBlockingQueue<SettableFuture<Boolean>>();
+                        = new LinkedBlockingQueue<>();
 
     private final Thread syncThread;
 
@@ -135,7 +135,7 @@ public class FileRedoLog implements RedoLog, Closeable {
     public void append(String txId, List<Item> writeItems,
             Set<Integer> memoryNodeIds) throws IOException {
         int writeSize = 0;
-        List<ByteBuffer> buffers = new LinkedList<ByteBuffer>();
+        List<ByteBuffer> buffers = new LinkedList<>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(out);
         dout.writeInt(RECORD_TYPE_WRITE);
@@ -215,7 +215,7 @@ public class FileRedoLog implements RedoLog, Closeable {
     public Set<String> getTransactionIDs() {
         Set<String> txIds;
         synchronized (loggedTransactions) {
-            txIds = new HashSet<String>(loggedTransactions.keySet());
+            txIds = new HashSet<>(loggedTransactions.keySet());
         }
         return txIds;
     }
@@ -361,7 +361,7 @@ public class FileRedoLog implements RedoLog, Closeable {
 
         long position;
 
-        final List<WriteItem> writeItems = new ArrayList<WriteItem>();
+        final List<WriteItem> writeItems = new ArrayList<>();
     }
 
     private static final class WriteItem {

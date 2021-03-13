@@ -34,9 +34,9 @@ public abstract class AbstractMemoryNode implements MemoryNode {
 
     private final Set<String> forcedAbort = Collections.synchronizedSet(new HashSet<String>());
 
-    private final Map<Integer, Integer> readLocks = new HashMap<Integer, Integer>();
+    private final Map<Integer, Integer> readLocks = new HashMap<>();
 
-    private final Set<Integer> writeLocks = new HashSet<Integer>();
+    private final Set<Integer> writeLocks = new HashSet<>();
 
     private final MemoryNodeInfo info;
 
@@ -52,7 +52,7 @@ public abstract class AbstractMemoryNode implements MemoryNode {
     @Override
     public Result executeAndPrepare(MiniTransaction tx, Set<Integer> memoryNodeIds) {
         Result result;
-        Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+        Set<ItemReference> failedCompares = new HashSet<>();
         Locks locks = createLocks(tx);
         getInDoubtMap().put(tx.getTxId(), locks);
         if (!acquireLocks(tx.getTxId(), locks)) {

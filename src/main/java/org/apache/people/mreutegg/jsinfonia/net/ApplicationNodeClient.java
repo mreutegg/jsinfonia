@@ -64,7 +64,7 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
                     return client.getMemoryNodeInfos();
                 }
             });
-            Map<Integer, MemoryNodeInfo> map = new HashMap<Integer, MemoryNodeInfo>();
+            Map<Integer, MemoryNodeInfo> map = new HashMap<>();
             for (TMemoryNodeInfo info : infos) {
                 map.put(info.getId(), new SimpleMemoryNodeInfo(
                         info.getId(), info.getAddressSpace(), info.getItemSize()));
@@ -87,7 +87,7 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
                 }
             });
             if (response.isSetReadItems()) {
-                Map<ItemReference, Item> readItems = new HashMap<ItemReference, Item>();
+                Map<ItemReference, Item> readItems = new HashMap<>();
                 for (Item item : tx.getReadItems()) {
                     readItems.put(item.getReference(), item);
                 }

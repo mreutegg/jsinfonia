@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class SimpleMemoryNodeDirectory<T extends MemoryNode> implements MemoryNodeDirectory<T> {
 
-    private final Map<Integer, T> directory = new HashMap<Integer, T>();
+    private final Map<Integer, T> directory = new HashMap<>();
 
     public SimpleMemoryNodeDirectory() {
     }

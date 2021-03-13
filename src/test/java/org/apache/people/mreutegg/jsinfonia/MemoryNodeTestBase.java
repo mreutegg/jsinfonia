@@ -80,7 +80,7 @@ public abstract class MemoryNodeTestBase {
 //        }
 
         // perform transactions with numThreads
-        List<Thread> workers = new ArrayList<Thread>();
+        List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < numThreads; i++) {
             workers.add(new Thread(new Runnable() {
 

@@ -55,7 +55,7 @@ public class SinfoniaListTest {
 
     @Before
     public void init() {
-        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
+        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         for (int i = 0; i < NUM_MEMORY_NODES; i++) {
             directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
         }
@@ -66,7 +66,7 @@ public class SinfoniaListTest {
                 new Transaction<List<ItemReference>>() {
             @Override
             public List<ItemReference> perform(TransactionContext txContext) {
-                List<ItemReference> headerRefs = new ArrayList<ItemReference>();
+                List<ItemReference> headerRefs = new ArrayList<>();
                 for (int i = 0; i < NUM_MEMORY_NODES; i++) {
                     headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
                 }
@@ -76,7 +76,7 @@ public class SinfoniaListTest {
         itemMgrFactory = new ItemManagerFactory() {
             @Override
             public ItemManager createItemManager(TransactionContext txContext) {
-                Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+                Map<Integer, ItemManager> itemMgrs = new HashMap<>();
                 for (ItemReference r : itemMgrHeaderRefs) {
                     itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
                 }
@@ -124,7 +124,7 @@ public class SinfoniaListTest {
                             @Override
                             public Iterable<Integer> read(ByteBuffer data) {
                                 char num = data.getChar();
-                                List<Integer> items = new ArrayList<Integer>();
+                                List<Integer> items = new ArrayList<>();
                                 while (num-- > 0) {
                                     items.add(data.getInt());
                                 }

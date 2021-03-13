@@ -46,7 +46,7 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
         if (testDir.exists()) {
             delete(testDir);
         }
-        SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<FileMemoryNode>();
+        SimpleMemoryNodeDirectory<FileMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         ExecutorService executor = Executors.newFixedThreadPool(numMemoryNodes);
         try {
             for (int i = 0; i < numMemoryNodes; i++) {
@@ -60,7 +60,7 @@ public class FileMemoryNodeTest extends MemoryNodeTestBase {
             }
             testSinfonia(directory, addressSpace, itemSize, numThreads);
         } finally {
-            Collection<Callable<Void>> closes = new ArrayList<Callable<Void>>();
+            Collection<Callable<Void>> closes = new ArrayList<>();
             for (int i = 0; i < numMemoryNodes; i++) {
                 final FileMemoryNode fmn = directory.getMemoryNode(i);
                 closes.add(new Callable<Void>() {

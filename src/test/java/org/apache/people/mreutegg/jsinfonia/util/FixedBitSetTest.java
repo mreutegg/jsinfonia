@@ -45,7 +45,7 @@ public class FixedBitSetTest extends TestCase {
 
     public void testBitSet() throws Exception {
         for (int i = 0; i < 3; i++) {
-            SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+            SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
             directory.addMemoryNode(new InMemoryMemoryNode(0, 1024, 1024));
             appNode = new SimpleApplicationNode(directory, EXECUTOR);
             doTest((int) (Math.random() * 83) + 1);
@@ -54,7 +54,7 @@ public class FixedBitSetTest extends TestCase {
 
     private void doTest(int numDataItems) {
         final ItemReference headerRef = new ItemReference(0, 0);
-        final List<ItemReference> dataItemRefs = new ArrayList<ItemReference>();
+        final List<ItemReference> dataItemRefs = new ArrayList<>();
         for (int i = 1; i <= numDataItems; i++) {
             dataItemRefs.add(new ItemReference(0, i));
         }
@@ -110,7 +110,7 @@ public class FixedBitSetTest extends TestCase {
             @Override
             public List<Integer> perform(TransactionContext txContext) {
                 FixedBitSet bitSet = new FixedBitSet(txContext, headerRef);
-                List<Integer> list = new ArrayList<Integer>();
+                List<Integer> list = new ArrayList<>();
                 for (int i = 0; i < bitSet.length(); i++) {
                     if (bitSet.get(i)) {
                         list.add(i);
@@ -135,11 +135,11 @@ public class FixedBitSetTest extends TestCase {
 
     public void testNextClearBit() throws Exception {
         final int numDataItems = 4;
-        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         directory.addMemoryNode(new InMemoryMemoryNode(0, 1024, 1024));
         appNode = new SimpleApplicationNode(directory, EXECUTOR);
         final ItemReference headerRef = new ItemReference(0, 0);
-        final List<ItemReference> dataItemRefs = new ArrayList<ItemReference>();
+        final List<ItemReference> dataItemRefs = new ArrayList<>();
         for (int i = 1; i <= numDataItems; i++) {
             dataItemRefs.add(new ItemReference(0, i));
         }
@@ -172,7 +172,7 @@ public class FixedBitSetTest extends TestCase {
             @Override
             public List<Integer> perform(TransactionContext txContext) {
                 FixedBitSet bitSet = new FixedBitSet(txContext, headerRef);
-                List<Integer> list = new ArrayList<Integer>();
+                List<Integer> list = new ArrayList<>();
                 for (int i = 0; i < bitSet.length(); i++) {
                     if (!bitSet.get(i)) {
                         list.add(i);

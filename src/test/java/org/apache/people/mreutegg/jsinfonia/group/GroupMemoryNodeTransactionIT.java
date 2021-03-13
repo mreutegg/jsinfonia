@@ -56,8 +56,8 @@ public class GroupMemoryNodeTransactionIT {
     }
 
     private void performTest(int numMemoryNodes) throws Exception {
-        List<MemoryNode> memoryNodes = new ArrayList<MemoryNode>();
-        List<MemoryNodeGroupMember> members = new ArrayList<MemoryNodeGroupMember>();
+        List<MemoryNode> memoryNodes = new ArrayList<>();
+        List<MemoryNodeGroupMember> members = new ArrayList<>();
         for (int i = 0; i < numMemoryNodes; i++) {
             MemoryNode memoryNode = new InMemoryMemoryNode(0, 1024, 1024);
             MemoryNodeGroupMember member = new MemoryNodeGroupMember(memoryNode);
@@ -71,7 +71,7 @@ public class GroupMemoryNodeTransactionIT {
         assertEquals(memoryNodes.get(0).getInfo().getId(), client.getInfo().getId());
         assertEquals(memoryNodes.get(0).getInfo().getItemSize(), client.getInfo().getItemSize());
 
-        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<MemoryNode>();
+        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         directory.addMemoryNode(client);
 
         ApplicationNode appNode = new SimpleApplicationNode(directory, Executors.newCachedThreadPool());

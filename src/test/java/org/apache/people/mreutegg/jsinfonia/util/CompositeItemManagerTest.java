@@ -38,7 +38,7 @@ public class CompositeItemManagerTest extends ItemManagerTestBase {
 
     @Override
     protected ItemManager getItemManager(TransactionContext txContext) {
-        Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+        Map<Integer, ItemManager> itemMgrs = new HashMap<>();
         for (int i = 0; i < NUM_MEMORY_NODE; i++) {
             itemMgrs.put(i, new ItemManagerImpl(txContext, new ItemReference(i, 0)));
         }
@@ -47,7 +47,7 @@ public class CompositeItemManagerTest extends ItemManagerTestBase {
 
     @Override
     protected ItemManager initializeItemManager(TransactionContext txContext) {
-        Map<Integer, ItemManager> itemMgrs = new HashMap<Integer, ItemManager>();
+        Map<Integer, ItemManager> itemMgrs = new HashMap<>();
         for (int i = 0; i < NUM_MEMORY_NODE; i++) {
             ItemReference header = ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE);
             itemMgrs.put(i, new ItemManagerImpl(txContext, header));
@@ -57,7 +57,7 @@ public class CompositeItemManagerTest extends ItemManagerTestBase {
 
     @Override
     protected ApplicationNode createApplicationNode() {
-        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         for (int i = 0; i < NUM_MEMORY_NODE; i++) {
             directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
         }

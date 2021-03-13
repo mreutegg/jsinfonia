@@ -99,7 +99,7 @@ public class Utils {
                 r = Result.OK;
                 break;
             case BAD_CMP:
-                Set<ItemReference> refs = new HashSet<ItemReference>();
+                Set<ItemReference> refs = new HashSet<>();
                 if (result.isSetFailedCompares()) {
                     for (TItemReference failedRef : result.getFailedCompares()) {
                         refs.add(new ItemReference(
@@ -156,7 +156,7 @@ public class Utils {
         if (response.isSuccess()) {
             return Response.SUCCESS;
         } else {
-            List<ItemReference> failedCompares = new ArrayList<ItemReference>();
+            List<ItemReference> failedCompares = new ArrayList<>();
             if (response.isSetFailedCompares()) {
                 for (TItemReference ref : response.getFailedCompares()) {
                     failedCompares.add(new ItemReference(

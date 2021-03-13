@@ -25,7 +25,7 @@ public class Response {
 
     private final boolean success;
 
-    private final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+    private final Set<ItemReference> failedCompares = new HashSet<>();
 
     private Response(boolean success, Iterable<ItemReference> failedCompares) {
         this.success = success;

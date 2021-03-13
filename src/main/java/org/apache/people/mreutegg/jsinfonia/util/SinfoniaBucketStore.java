@@ -452,7 +452,7 @@ public class SinfoniaBucketStore<K, V>
                 log.debug("SinfoniaBucket{" + id + "}.transferTo()");
             }
             map.putAll(getEntries());
-            List<ItemReference> toFree = new ArrayList<ItemReference>();
+            List<ItemReference> toFree = new ArrayList<>();
             ItemReference next = id;
             for (;;) {
                 next = txContext.read(next, new DataOperation<ItemReference>() {
@@ -498,7 +498,7 @@ public class SinfoniaBucketStore<K, V>
         }
 
         private Map<K, V> getEntries() {
-            final Map<K, V> entries = new HashMap<K, V>();
+            final Map<K, V> entries = new HashMap<>();
             ItemReference ref = id;
             while (ref.getMemoryNodeId() != NO_NEXT_MARKER) {
                 if (log.isDebugEnabled()) {
@@ -519,7 +519,7 @@ public class SinfoniaBucketStore<K, V>
         }
 
         private void setEntries(final Map<K, V> entries) {
-            final List<Map.Entry<K, V>> entryList = new ArrayList<Map.Entry<K,V>>(entries.entrySet());
+            final List<Map.Entry<K, V>> entryList = new ArrayList<>(entries.entrySet());
             final int[] start = {0};
             ItemReference ref = id;
             while (ref.getMemoryNodeId() != NO_NEXT_MARKER) {

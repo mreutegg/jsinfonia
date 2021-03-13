@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
 public final class ExecuteAndPrepareMessage extends MemoryNodeMessage {
 
     private final MiniTransaction tx;
-    private final Set<Integer> memoryNodeIds = new HashSet<Integer>();
+    private final Set<Integer> memoryNodeIds = new HashSet<>();
 
     private ExecuteAndPrepareMessage(MiniTransaction tx, Set<Integer> memoryNodeIds) {
         this.tx = tx;
@@ -68,7 +68,7 @@ public final class ExecuteAndPrepareMessage extends MemoryNodeMessage {
         for (int i = 0; i < numReadItems; i++) {
             tx.addReadItem(readItem(data, true));
         }
-        Set<Integer> memoryNodeIds = new HashSet<Integer>();
+        Set<Integer> memoryNodeIds = new HashSet<>();
         int numMemoryNodeIds = data.getInt();
         for (int i = 0; i < numMemoryNodeIds; i++) {
             memoryNodeIds.add(data.getInt());

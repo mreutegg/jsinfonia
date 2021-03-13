@@ -36,7 +36,7 @@ public class InMemoryMemoryNode extends AbstractMemoryNode {
 
     public InMemoryMemoryNode(int memoryNodeId, int addressSpace, int itemSize) {
         super(new SimpleMemoryNodeInfo(memoryNodeId, addressSpace, itemSize));
-        items = new ArrayList<Item>(addressSpace);
+        items = new ArrayList<>(addressSpace);
         for (int i = 0; i < addressSpace; i++) {
             items.add(null);
         }

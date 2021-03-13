@@ -38,7 +38,7 @@ public abstract class AbstractTransactionTest extends TestCase {
 
     protected final File testDir = new File(new File("target"), "memoryNodes");
     protected ExecutorService executor;
-    protected final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    protected final List<Runnable> shutdownHooks = new ArrayList<>();
     protected MemoryNodeDirectory<? extends MemoryNode> directory;
 
     @Override
@@ -77,7 +77,7 @@ public abstract class AbstractTransactionTest extends TestCase {
 
     protected final MemoryNodeDirectory<? extends MemoryNode> createDirectory(
             int numNodes, int addressSpace, int itemSize, int bufferSize) throws IOException {
-        SimpleMemoryNodeDirectory<MemoryNode> dir = new SimpleMemoryNodeDirectory<MemoryNode>();
+        SimpleMemoryNodeDirectory<MemoryNode> dir = new SimpleMemoryNodeDirectory<>();
         for (int i = 0; i < numNodes; i++) {
             MemoryNode mn = new InMemoryMemoryNode(i, addressSpace, itemSize);
             dir.addMemoryNode(mn);

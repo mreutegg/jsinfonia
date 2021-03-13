@@ -112,9 +112,9 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
     //-------------------------------< internal >------------------------------
 
     private Map<K, V> createMap(TransactionContext txContext) {
-        SinfoniaBucketStore<K, V> store = new SinfoniaBucketStore<K, V>(
+        SinfoniaBucketStore<K, V> store = new SinfoniaBucketStore<>(
                 factory.createItemManager(txContext),
                 txContext, headerRef, reader, writer);
-        return new LinearHashMap<K, V>(store);
+        return new LinearHashMap<>(store);
     }
 }

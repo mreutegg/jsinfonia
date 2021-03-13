@@ -24,13 +24,13 @@ public class MiniTransaction {
 
     private final String txId;
 
-    private final Set<Integer> memoryNodeIds = new HashSet<Integer>();
+    private final Set<Integer> memoryNodeIds = new HashSet<>();
 
-    private final List<Item> compareItems = new ArrayList<Item>();
+    private final List<Item> compareItems = new ArrayList<>();
 
-    private final List<Item> readItems = new ArrayList<Item>();
+    private final List<Item> readItems = new ArrayList<>();
 
-    private final List<Item> writeItems = new ArrayList<Item>();
+    private final List<Item> writeItems = new ArrayList<>();
 
     public MiniTransaction(String txId) {
         this.txId = txId;

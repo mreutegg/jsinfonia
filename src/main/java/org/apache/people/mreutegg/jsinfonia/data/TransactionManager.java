@@ -44,7 +44,7 @@ public class TransactionManager implements TransactionContext {
      * Revisions of items read by the current transaction.
      * These revisions are compared on commit.
      */
-    private final Map<ItemReference, Integer> revisions = new HashMap<ItemReference, Integer>();
+    private final Map<ItemReference, Integer> revisions = new HashMap<>();
 
     public TransactionManager(ApplicationNode appNode,
             DataItemCache cache) {

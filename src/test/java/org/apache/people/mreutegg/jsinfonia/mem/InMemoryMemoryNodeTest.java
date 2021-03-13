@@ -48,7 +48,7 @@ public class InMemoryMemoryNodeTest extends MemoryNodeTestBase {
             final int addressSpace,
             final int itemSize,
             final int numThreads) throws Exception {
-        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<InMemoryMemoryNode>();
+        SimpleMemoryNodeDirectory<InMemoryMemoryNode> directory = new SimpleMemoryNodeDirectory<>();
         for (int i = 0; i < numMemoryNodes; i++) {
             directory.addMemoryNode(
                     new InMemoryMemoryNode(i, addressSpace, itemSize));

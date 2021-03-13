@@ -64,7 +64,7 @@ public final class ResultMessage extends MemoryNodeMessage {
         switch (vote) {
             case BAD_CMP:
                 int memoryNodeId = -1;
-                Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+                Set<ItemReference> failedCompares = new HashSet<>();
                 int size = data.getInt();
                 for (int i = 0; i < size; i++) {
                     if (i == 0) {
@@ -143,7 +143,7 @@ public final class ResultMessage extends MemoryNodeMessage {
         buffer.put(txIdBytes);
         buffer.putInt(result.getVote().ordinal());
         if (result.getVote() == Vote.BAD_CMP) {
-            List<ItemReference> refs = new ArrayList<ItemReference>();
+            List<ItemReference> refs = new ArrayList<>();
             for (ItemReference ref : result.getFailedCompares()) {
                 refs.add(ref);
             }
