@@ -22,7 +22,6 @@ import java.util.Map;
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.Item;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
-import org.apache.people.mreutegg.jsinfonia.MemoryNode;
 import org.apache.people.mreutegg.jsinfonia.MemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.MiniTransaction;
 import org.apache.people.mreutegg.jsinfonia.Response;
