@@ -20,6 +20,7 @@ import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
@@ -117,7 +118,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
     public Iterator<E> iterator() {
         return new Iterator<E>() {
 
-            Iterator<Iterator<E>> iterators = getBucketReaders();
+            final Iterator<Iterator<E>> iterators = getBucketReaders();
             Iterator<E> currentIt = nextIterator();
             E nextElement = fetchNext();
 
@@ -128,6 +129,9 @@ public class SinfoniaList<E> extends AbstractList<E> {
 
             @Override
             public E next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 E next = nextElement;
                 nextElement = fetchNext();
                 return next;
@@ -264,6 +268,9 @@ public class SinfoniaList<E> extends AbstractList<E> {
 
             @Override
             public Iterator<E> next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 Iterator<E> next = nextIt;
                 nextBucketRef = txContext.read(nextBucketRef,
                         new DataOperation<ItemReference>() {

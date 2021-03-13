@@ -34,8 +34,8 @@ public abstract class ThriftClient<C> implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(ThriftClient.class);
 
-    private final List<TSocket> sockets = new ArrayList<TSocket>();
-    private final BlockingQueue<C> clients = new LinkedBlockingQueue<C>();
+    private final List<TSocket> sockets = new ArrayList<>();
+    private final BlockingQueue<C> clients = new LinkedBlockingQueue<>();
     private final int numConnections;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -50,7 +50,7 @@ public abstract class ThriftClient<C> implements Closeable {
                 transport = new TFramedTransport(socket);
             }
             transport.open();
-            log.debug("opened socket to " + host + ":" + port + " on " + socket.getSocket().getLocalPort());
+            log.debug("opened socket to {}:{} on {}", new Object[]{host, port, socket.getSocket().getLocalPort()});
             clients.add(createClient(transport));
         }
     }

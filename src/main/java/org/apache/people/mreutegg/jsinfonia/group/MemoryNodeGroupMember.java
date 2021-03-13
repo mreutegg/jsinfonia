@@ -66,10 +66,10 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
 
     private final JChannel channel;
 
-    private Map<String, ExecuteAndPrepareMessage> bufferedMessages =
+    private final Map<String, ExecuteAndPrepareMessage> bufferedMessages =
             Collections.synchronizedMap(new HashMap<String, ExecuteAndPrepareMessage>());
 
-    private Striped<Lock> locks = Striped.lock(16);
+    private final Striped<Lock> locks = Striped.lock(16);
 
     /**
      * Address of the primary MemoryNodeGroupMember
@@ -91,7 +91,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
         this.channel.setName(CHANNEL_NAME);
         this.channel.setDiscardOwnMessages(true);
         this.channel.setReceiver(new CommunicationReceiver());
-        this.channel.connect("MemoryNodeGroup-" + memoryNode.getInfo().getId(), null, 60 * 1000, true);
+        this.channel.connect("MemoryNodeGroup-" + memoryNode.getInfo().getId(), null, 60L * 1000, true);
     }
 
     //------------------------------< Closeable >------------------------------
@@ -231,7 +231,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
 
         @Override
         public void viewAccepted(View new_view) {
-            SortedSet<Address> sortedGroupMembers = new TreeSet<Address>();
+            SortedSet<Address> sortedGroupMembers = new TreeSet<>();
             for (Address a : new_view.getMembers()) {
                 if (a.toString().equals(CHANNEL_NAME)) {
                     sortedGroupMembers.add(a);
@@ -246,7 +246,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
 
         @Override
         public void suspect(Address suspected_mbr) {
-            log.info("suspect(" + suspected_mbr + ")");
+            log.info("suspect({}})", suspected_mbr);
         }
 
         @Override

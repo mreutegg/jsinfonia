@@ -303,7 +303,7 @@ public class SinfoniaBucketStore<K, V>
         }
     }
 
-    private static void throwNoMoreFreeItems() {
+    private static void throwNoMoreFreeItems() throws FailTransactionException {
         // TODO: more meaningful exception
         throw new FailTransactionException(
                 new RuntimeException("no more free items"));

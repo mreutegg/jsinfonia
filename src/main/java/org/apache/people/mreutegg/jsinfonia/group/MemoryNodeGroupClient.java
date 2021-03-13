@@ -60,7 +60,7 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
 
     private MemoryNodeInfo info;
 
-    private Map<String, SettableFuture<ResultMessage>> pendingResults = Collections.synchronizedMap(
+    private final Map<String, SettableFuture<ResultMessage>> pendingResults = Collections.synchronizedMap(
             new HashMap<String, SettableFuture<ResultMessage>>());
 
     public MemoryNodeGroupClient(final int memoryNodeId) throws Exception {
@@ -77,7 +77,7 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
         this.channel.setName("MemoryNodeGroupClient");
         this.channel.setReceiver(new CommunicationReceiver());
         this.channel.setDiscardOwnMessages(true);
-        this.channel.connect("MemoryNodeGroup-" + memoryNodeId, null, 3 * 1000);
+        this.channel.connect("MemoryNodeGroup-" + memoryNodeId, null, 3L * 1000);
     }
 
     @Override
