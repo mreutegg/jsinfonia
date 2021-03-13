@@ -40,7 +40,7 @@ public abstract class AbstractMemoryNode implements MemoryNode {
 
     private final MemoryNodeInfo info;
 
-    public AbstractMemoryNode(MemoryNodeInfo info) {
+    protected AbstractMemoryNode(MemoryNodeInfo info) {
         this.info = info;
     }
 
@@ -68,7 +68,7 @@ public abstract class AbstractMemoryNode implements MemoryNode {
         if (result.getVote() == Vote.OK) {
             try {
                 readItems(tx);
-                if (tx.getWriteItems().size() > 0) {
+                if (!tx.getWriteItems().isEmpty()) {
                     // only log transactions with write items
                     getRedoLog().append(tx.getTxId(), tx.getWriteItems(), memoryNodeIds);
                 }
@@ -150,7 +150,7 @@ public abstract class AbstractMemoryNode implements MemoryNode {
                     if (i == null) {
                         i = 1;
                     } else {
-                        i = Integer.valueOf(i.intValue() + 1);
+                        i = i + 1;
                     }
                     readLocks.put(address, i);
                 }
@@ -169,10 +169,10 @@ public abstract class AbstractMemoryNode implements MemoryNode {
             for (Integer address : locks.readSet) {
                 Integer i = readLocks.get(address);
                 if (i != null) {
-                    if (i.intValue() == 1) {
+                    if (i == 1) {
                         readLocks.remove(address);
                     } else {
-                        readLocks.put(address, Integer.valueOf(i.intValue() - 1));
+                        readLocks.put(address, i - 1);
                     }
                 } else {
                     throw new IllegalStateException(
