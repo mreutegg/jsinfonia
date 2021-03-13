@@ -18,7 +18,7 @@ addons:
     token:
       secure: "eWzOQjpDr5x7FGdbtyuKHRb6W+R3Dgwy6mCLQfuN+hWhNO8ge3uL9npm3u68L/+5f3XId3BhkuMKXgE9vRee0rWayuh5gE3TsTUgywSppwp7rn5/28OIgJcav/AtQxxWWNV1SFuhZLrs/szHEEy+YCoL6Vjx/6p9iXwBRcF0vIo="
 script:
-  - mvn org.jacoco:jacoco-maven-plugin:prepare-agent verify sonar:sonar -Dsonar.projectKey=mreutegg_jsinfonia
+  - mvn -Pcoverage verify sonar:sonar -Dsonar.projectKey=mreutegg_jsinfonia
 language: java
 jdk:
   - openjdk11

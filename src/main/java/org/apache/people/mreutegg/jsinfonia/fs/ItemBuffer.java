@@ -157,14 +157,6 @@ class ItemBuffer implements Runnable {
                     dirtyItems.remove(address);
                     monitor.notifyAll();
                 }
-            } catch (IOException e) {
-                log.warn("Unable to write back dirty item", e);
-                try {
-                    // sleep for a second to avoid excessive warnings
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    // ignore
-                }
             } finally {
                 item.unlock();
             }
