@@ -23,12 +23,12 @@ public class Response {
 
     public static final Response SUCCESS = new Response(true, Collections.<ItemReference>emptyList());
 
-    private final boolean success;
+    private final boolean isSuccess;
 
     private final Set<ItemReference> failedCompares = new HashSet<>();
 
     private Response(boolean success, Iterable<ItemReference> failedCompares) {
-        this.success = success;
+        this.isSuccess = success;
         for (ItemReference ref : failedCompares) {
             this.failedCompares.add(ref);
         }
@@ -39,7 +39,7 @@ public class Response {
     }
 
     public boolean isSuccess() {
-        return success;
+        return isSuccess;
     }
 
     public Iterable<ItemReference> getFailedCompares() {
