@@ -31,7 +31,8 @@ public class FailTransactionException extends RuntimeException {
         super(message, cause);
     }
 
-    public RuntimeException getCause() {
+    @Override
+    public synchronized RuntimeException getCause() {
         return (RuntimeException) super.getCause();
     }
 }

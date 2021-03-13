@@ -84,7 +84,7 @@ public class SimpleApplicationNode implements ApplicationNode {
             });
         }
 
-        final Set<ItemReference> failedCompares = new HashSet<ItemReference>();
+        final Set<ItemReference> failedCompares = new HashSet<>();
         final boolean[] success = { false };
         try {
             List<? extends Future<Result>> results;
@@ -118,8 +118,9 @@ public class SimpleApplicationNode implements ApplicationNode {
             success[0] = isVoteOK;
         } catch (InterruptedException e) {
             // success = false
+            Thread.currentThread().interrupt();
         } catch (RejectedExecutionException e) {
-            // success = false;
+            // success = false
         }
         callables.clear();
         for (final Integer memoryNodeId : memoryNodeIds) {
@@ -148,7 +149,7 @@ public class SimpleApplicationNode implements ApplicationNode {
             try {
                 executor.invokeAll(callables);
             } catch (InterruptedException e) {
-                // TODO handle?
+                Thread.currentThread().interrupt();
             }
         }
         if (success[0]) {

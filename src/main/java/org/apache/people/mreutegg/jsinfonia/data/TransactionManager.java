@@ -44,7 +44,7 @@ public class TransactionManager implements TransactionContext {
      * Revisions of items read by the current transaction.
      * These revisions are compared on commit.
      */
-    private Map<ItemReference, Integer> revisions = new HashMap<ItemReference, Integer>();
+    private final Map<ItemReference, Integer> revisions = new HashMap<ItemReference, Integer>();
 
     public TransactionManager(ApplicationNode appNode,
             DataItemCache cache) {
@@ -63,7 +63,6 @@ public class TransactionManager implements TransactionContext {
                     Thread.sleep((long) (Math.random() * 2.0 * retries));
                 } catch (InterruptedException e) {
                     // ignore
-                    Thread.interrupted();
                 }
             }
             log.debug("Start transaction");
@@ -80,7 +79,7 @@ public class TransactionManager implements TransactionContext {
                 continue;
             }
 
-            /**
+            /*
              * transaction where compare and write operations
              * are added to ensure consistent reads and writes.
              */
@@ -136,7 +135,7 @@ public class TransactionManager implements TransactionContext {
     public <T> T read(ItemReference reference, DataOperation<T> op) {
         // perform read operation on the data
         if (log.isDebugEnabled()) {
-            log.debug("read(" + reference + ")");
+            log.debug("read({}})", reference);
         }
         return op.perform(readItem(reference).getData().asReadOnlyBuffer());
     }
@@ -145,7 +144,7 @@ public class TransactionManager implements TransactionContext {
     public <T> T write(ItemReference reference, DataOperation<T> op) {
         // perform write operation on the data
         if (log.isDebugEnabled()) {
-            log.debug("write(" + reference + ")");
+            log.debug("write({}})", reference);
         }
         return op.perform(writeItem(reference).getData().duplicate());
     }
@@ -181,7 +180,7 @@ public class TransactionManager implements TransactionContext {
             }
             Item i = new Item(memoryNodeId, address, 0, new byte[info.getItemSize()]);
             boolean success = false;
-            while (success == false) {
+            while (!success) {
                 MiniTransaction mt = appNode.createMiniTransaction();
                 mt.addReadItem(i);
                 success = appNode.executeTransaction(mt).isSuccess();

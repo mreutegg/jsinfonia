@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -121,7 +123,7 @@ public class FileRedoLog implements RedoLog, Closeable {
                             }
                         }
                     } catch (InterruptedException e) {
-                        // ignore
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -211,9 +213,9 @@ public class FileRedoLog implements RedoLog, Closeable {
 
     @Override
     public Set<String> getTransactionIDs() {
-        Set<String> txIds = new HashSet<String>();
+        Set<String> txIds;
         synchronized (loggedTransactions) {
-            txIds.addAll(loggedTransactions.keySet());
+            txIds = new HashSet<String>(loggedTransactions.keySet());
         }
         return txIds;
     }
@@ -283,7 +285,7 @@ public class FileRedoLog implements RedoLog, Closeable {
 
     void closeAndDelete() throws IOException {
         close();
-        new File(path).delete();
+        Files.delete(new File(path).toPath());
     }
 
     private void runRecovery() throws IOException {
@@ -315,7 +317,7 @@ public class FileRedoLog implements RedoLog, Closeable {
                                     wi.offset, wi.length);
                         }
                     } else {
-                        log.error("Unknown record type: " + recordType);
+                        log.error("Unknown record type: {}", recordType);
                     }
                 }
             } catch (EOFException e) {

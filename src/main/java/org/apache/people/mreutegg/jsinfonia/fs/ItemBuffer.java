@@ -38,8 +38,7 @@ class ItemBuffer implements Runnable {
 
     private final Object monitor = new Object();
 
-    private final Map<Integer, CachedItem> dirtyItems =
-            new LinkedHashMap<Integer, CachedItem>();
+    private final Map<Integer, CachedItem> dirtyItems = new LinkedHashMap<>();
 
     private final Thread writeBackThread;
 
@@ -69,6 +68,7 @@ class ItemBuffer implements Runnable {
             this.writeBackThread.join();
         } catch (InterruptedException e) {
             log.warn("Interrupted while waiting for write back thread to finish");
+            Thread.currentThread().interrupt();
         }
     }
 

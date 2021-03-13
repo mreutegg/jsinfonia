@@ -39,11 +39,11 @@ public class RollingRedoLog implements RedoLog, Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(RollingRedoLog.class);
 
-    private static long MAX_LOG_SIZE = 1024 * 1024 * 128; // 128 MB
+    private static final long MAX_LOG_SIZE = 1024L * 1024 * 128; // 128 MB
 
-    private static final String SUFFIX_FORMAT = "%0" + Long.valueOf(Long.MAX_VALUE).toString().length() + "d";
+    private static final String SUFFIX_FORMAT = "%0" + Long.toString(Long.MAX_VALUE).length() + "d";
 
-    private final LinkedList<FileRedoLog> redoLogs = new LinkedList<FileRedoLog>();
+    private final LinkedList<FileRedoLog> redoLogs = new LinkedList<>();
 
     private long nextLogIndex = 0;
 
@@ -68,6 +68,9 @@ public class RollingRedoLog implements RedoLog, Closeable {
                 return name.startsWith(file.getName() + ".");
             }
         });
+        if (logFiles == null) {
+            throw new IOException("Not a directory: " + file.getPath());
+        }
         Arrays.sort(logFiles, new Comparator<File>() {
             @Override
             public int compare(File o1, File o2) {
@@ -117,10 +120,11 @@ public class RollingRedoLog implements RedoLog, Closeable {
             logCleaner.join();
         } catch (InterruptedException e) {
             log.warn("interrupted while waiting for log cleaner thread");
+            Thread.currentThread().interrupt();
         }
         synchronized (redoLogs) {
-            for (FileRedoLog log : redoLogs) {
-                log.close();
+            for (FileRedoLog redoLog : redoLogs) {
+                redoLog.close();
             }
             redoLogs.clear();
         }
@@ -129,15 +133,15 @@ public class RollingRedoLog implements RedoLog, Closeable {
     @Override
     public void append(String txId, List<Item> writeItems,
             Set<Integer> memoryNodeIds) throws IOException {
-        FileRedoLog log;
+        FileRedoLog redoLog;
         synchronized (redoLogs) {
-            log = redoLogs.peekLast();
+            redoLog = redoLogs.peekLast();
         }
-        log.append(txId, writeItems, memoryNodeIds);
-        if (log.getLength() > MAX_LOG_SIZE) {
+        redoLog.append(txId, writeItems, memoryNodeIds);
+        if (redoLog.getLength() > MAX_LOG_SIZE) {
             synchronized (redoLogs) {
-                log = redoLogs.peekLast();
-                if (log.getLength() > MAX_LOG_SIZE) {
+                redoLog = redoLogs.peekLast();
+                if (redoLog.getLength() > MAX_LOG_SIZE) {
                     addRedoLog();
                 }
             }
@@ -150,52 +154,54 @@ public class RollingRedoLog implements RedoLog, Closeable {
         synchronized (redoLogs) {
             logs = redoLogs.toArray(new FileRedoLog[redoLogs.size()]);
         }
-        Set<String> ids = new HashSet<String>();
-        for (FileRedoLog log : logs) {
-            ids.addAll(log.getTransactionIDs());
+        Set<String> ids = new HashSet<>();
+        for (FileRedoLog redoLog : logs) {
+            ids.addAll(redoLog.getTransactionIDs());
         }
         return ids;
     }
 
     @Override
     public void decided(String txId, boolean commit) {
-        FileRedoLog log = null;
+        FileRedoLog redoLog = null;
         synchronized (redoLogs) {
             Iterator<FileRedoLog> logs = redoLogs.descendingIterator();
             while (logs.hasNext()) {
                 FileRedoLog frl = logs.next();
                 if (frl.containsUndecidedTransaction(txId)) {
-                    log = frl;
+                    redoLog = frl;
                     break;
                 }
             }
         }
-        if (log == null) {
+        if (redoLog == null) {
             throw new IllegalArgumentException("unknown transaction id: " + txId);
         }
-        log.decided(txId, commit);
+        redoLog.decided(txId, commit);
     }
 
     //-----------------------------< RollingRedoLog >--------------------------
 
     private void addRedoLog() throws IOException {
         StringBuilder sb = new StringBuilder();
-        new Formatter(sb).format(SUFFIX_FORMAT, nextLogIndex++);
-        redoLogs.add(new FileRedoLog(memoryNode, 
+        try (Formatter f = new Formatter(sb)) {
+            f.format(SUFFIX_FORMAT, nextLogIndex++);
+        }
+        redoLogs.add(new FileRedoLog(memoryNode,
                 new File(file.getParentFile(), file.getName() + "." + sb)));
     }
 
     private void maybeCleanupLogs() throws IOException {
         for (;;) {
-            FileRedoLog log;
+            FileRedoLog redoLog;
             synchronized (redoLogs) {
                 if (redoLogs.size() <= 1) {
                     return;
                 }
-                log = redoLogs.peekFirst();
+                redoLog = redoLogs.peekFirst();
             }
-            if (log.getTransactionIDs().isEmpty()) {
-                log.closeAndDelete();
+            if (redoLog.getTransactionIDs().isEmpty()) {
+                redoLog.closeAndDelete();
             }
             synchronized (redoLogs) {
                 redoLogs.removeFirst();
