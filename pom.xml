@@ -47,7 +47,7 @@
 		<dependency>
 			<groupId>org.jgroups</groupId>
 			<artifactId>jgroups</artifactId>
-			<version>3.2.5.Final</version>
+			<version>4.0.0.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
