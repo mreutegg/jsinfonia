@@ -22,30 +22,32 @@ import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
-public class LeafNode extends BTreeNode {
+public class InternalNode extends BTreeNode {
 
-    protected final List<byte[]> values = new ArrayList<>();
+    protected final List<ItemReference> children = new ArrayList<>();
 
-    public LeafNode(TransactionContext txContext, ItemReference ref) {
+    public InternalNode(TransactionContext txContext, ItemReference ref) {
         super(txContext, ref);
     }
 
-    public byte[] getValue(int index) {
-        return values.get(index);
+    public ItemReference getChild(int index) {
+        return children.get(index);
     }
 
-    public void addEntry(int index, String key, byte[] value) {
+    public void addChild(int index, ItemReference child) {
+        children.add(index, child);
+    }
+
+    public void addKey(int index, String key) {
         keys.add(index, key);
-        values.add(index, value);
     }
 
-    public void removeEntry(int index) {
-        keys.remove(index);
-        values.remove(index);
+    public ItemReference removeChild(int index) {
+        return children.remove(index);
     }
 
-    public void updateValue(int index, byte[] value) {
-        values.set(index, value);
+    public String removeKey(int index) {
+        return keys.remove(index);
     }
 
     @Override
@@ -53,13 +55,13 @@ public class LeafNode extends BTreeNode {
         txContext.write(ref, new DataOperation<Void>() {
             @Override
             public Void perform(ByteBuffer data) {
-                data.put(TYPE_LEAF);
+                data.put(TYPE_INTERNAL);
                 data.putInt(keys.size());
                 for (String key : keys) {
                     writeString(data, key);
                 }
-                for (byte[] value : values) {
-                    writeBytes(data, value);
+                for (ItemReference child : children) {
+                    writeItemReference(data, child);
                 }
                 return null;
             }
@@ -72,17 +74,17 @@ public class LeafNode extends BTreeNode {
             @Override
             public Void perform(ByteBuffer data) {
                 byte type = data.get();
-                if (type != TYPE_LEAF) {
-                    throw new IllegalStateException("Not a leaf node");
+                if (type != TYPE_INTERNAL) {
+                    throw new IllegalStateException("Not an internal node");
                 }
                 int count = data.getInt();
                 keys.clear();
                 for (int i = 0; i < count; i++) {
                     keys.add(readString(data));
                 }
-                values.clear();
-                for (int i = 0; i < count; i++) {
-                    values.add(readBytes(data));
+                children.clear();
+                for (int i = 0; i <= count; i++) {
+                    children.add(readItemReference(data));
                 }
                 return null;
             }

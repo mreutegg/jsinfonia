@@ -15,54 +15,58 @@
  */
 package org.apache.people.mreutegg.jsinfonia.btree;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.Set;
-
-import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
-import org.apache.people.mreutegg.jsinfonia.Item;
+import java.nio.ByteBuffer;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
-import org.apache.people.mreutegg.jsinfonia.MemoryNode;
-import org.apache.people.mreutegg.jsinfonia.MemoryNodeDirectory;
-import org.apache.people.mreutegg.jsinfonia.MiniTransaction;
+import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
-import org.apache.people.mreutegg.jsinfonia.util.ByteBufferInputStream;
-
 
 public class Metadata {
 
-    private static final int MAGIC = 1029384756;
+    private static final int MAGIC = 0x42545245; // "BTRE"
 
     private final TransactionContext txContext;
+    private final ItemReference ref;
 
-    private int version;
-
-    private int modCount;
-
-    private ItemReference rootNodeRef;
-
-    private ItemReference versionTableRef;
-
-    /**
-     * TODO: initialize and read must be transactional!
-     * @throws IOException
-     */
-    public Metadata(TransactionContext txContext) throws IOException {
+    public Metadata(TransactionContext txContext, ItemReference ref) {
         this.txContext = txContext;
+        this.ref = ref;
     }
 
-    public VersionTable getVersionTable() {
-        return new VersionTable();
+    public void initialize(final ItemReference rootNodeRef) {
+        txContext.write(ref, new DataOperation<Void>() {
+            @Override
+            public Void perform(ByteBuffer data) {
+                data.putInt(MAGIC);
+                data.putInt(rootNodeRef.getMemoryNodeId());
+                data.putInt(rootNodeRef.getAddress());
+                return null;
+            }
+        });
     }
 
-    public BTreeNode getRootNode() {
-        // TODO
-        return null;
+    public ItemReference getRootNodeRef() {
+        return txContext.read(ref, new DataOperation<ItemReference>() {
+            @Override
+            public ItemReference perform(ByteBuffer data) {
+                if (data.getInt() != MAGIC) {
+                    throw new IllegalStateException("Invalid magic number");
+                }
+                int memoryNodeId = data.getInt();
+                int address = data.getInt();
+                return new ItemReference(memoryNodeId, address);
+            }
+        });
     }
 
-    private DataInputStream initialize() {
-        // TODO Auto-generated method stub
-        return null;
+    public void setRootNodeRef(final ItemReference rootNodeRef) {
+        txContext.write(ref, new DataOperation<Void>() {
+            @Override
+            public Void perform(ByteBuffer data) {
+                data.putInt(MAGIC);
+                data.putInt(rootNodeRef.getMemoryNodeId());
+                data.putInt(rootNodeRef.getAddress());
+                return null;
+            }
+        });
     }
 }
