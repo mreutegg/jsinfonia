@@ -44,12 +44,7 @@ public abstract class ThriftServer {
 
     public void start() throws TTransportException {
         createServer();
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                server.serve();
-            }
-        });
+        Thread t = new Thread(() -> server.serve());
         t.start();
         while (!server.isServing()) {
             try {

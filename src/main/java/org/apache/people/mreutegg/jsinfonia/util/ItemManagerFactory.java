@@ -17,7 +17,8 @@ package org.apache.people.mreutegg.jsinfonia.util;
 
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
+@FunctionalInterface
 public interface ItemManagerFactory {
 
-    public ItemManager createItemManager(TransactionContext txContext);
+    ItemManager createItemManager(TransactionContext txContext);
 }

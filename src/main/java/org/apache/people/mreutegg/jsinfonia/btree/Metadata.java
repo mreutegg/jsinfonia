@@ -33,40 +33,31 @@ public class Metadata {
     }
 
     public void initialize(final ItemReference rootNodeRef) {
-        txContext.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.putInt(MAGIC);
-                data.putInt(rootNodeRef.getMemoryNodeId());
-                data.putInt(rootNodeRef.getAddress());
-                return null;
-            }
+        txContext.write(ref, data -> {
+            data.putInt(MAGIC);
+            data.putInt(rootNodeRef.getMemoryNodeId());
+            data.putInt(rootNodeRef.getAddress());
+            return null;
         });
     }
 
     public ItemReference getRootNodeRef() {
-        return txContext.read(ref, new DataOperation<ItemReference>() {
-            @Override
-            public ItemReference perform(ByteBuffer data) {
-                if (data.getInt() != MAGIC) {
-                    throw new IllegalStateException("Invalid magic number");
-                }
-                int memoryNodeId = data.getInt();
-                int address = data.getInt();
-                return new ItemReference(memoryNodeId, address);
+        return txContext.read(ref, data -> {
+            if (data.getInt() != MAGIC) {
+                throw new IllegalStateException("Invalid magic number");
             }
+            int memoryNodeId = data.getInt();
+            int address = data.getInt();
+            return new ItemReference(memoryNodeId, address);
         });
     }
 
     public void setRootNodeRef(final ItemReference rootNodeRef) {
-        txContext.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.putInt(MAGIC);
-                data.putInt(rootNodeRef.getMemoryNodeId());
-                data.putInt(rootNodeRef.getAddress());
-                return null;
-            }
+        txContext.write(ref, data -> {
+            data.putInt(MAGIC);
+            data.putInt(rootNodeRef.getMemoryNodeId());
+            data.putInt(rootNodeRef.getAddress());
+            return null;
         });
     }
 }

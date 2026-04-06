@@ -76,12 +76,7 @@ public class SimpleApplicationNode implements ApplicationNode {
         List<Callable<Result>> callables = new ArrayList<>();
         for (final Integer memoryNodeId : memoryNodeIds) {
             final MiniTransaction mt = tx.getTransactionForMemoryNode(memoryNodeId);
-            callables.add(new Callable<Result>() {
-                @Override
-                public Result call() throws Exception {
-                    return directory.getMemoryNode(memoryNodeId).executeAndPrepare(mt, memoryNodeIds);
-                }
-            });
+            callables.add(() -> directory.getMemoryNode(memoryNodeId).executeAndPrepare(mt, memoryNodeIds));
         }
 
         final Set<ItemReference> failedCompares = new HashSet<>();
@@ -124,13 +119,10 @@ public class SimpleApplicationNode implements ApplicationNode {
         }
         callables.clear();
         for (final Integer memoryNodeId : memoryNodeIds) {
-            callables.add(new Callable<Result>() {
-                @Override
-                public Result call() throws Exception {
-                    MemoryNode mn = directory.getMemoryNode(memoryNodeId);
-                    mn.commit(tx.getTxId(), success[0]);
-                    return null;
-                }
+            callables.add(() -> {
+                MemoryNode mn = directory.getMemoryNode(memoryNodeId);
+                mn.commit(tx.getTxId(), success[0]);
+                return null;
             });
         }
         if (callables.size() == 1) {

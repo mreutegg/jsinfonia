@@ -53,22 +53,19 @@ public abstract class BTreeNode {
     public abstract void load();
 
     public static BTreeNode load(final TransactionContext txContext, final ItemReference ref) {
-        return txContext.read(ref, new DataOperation<BTreeNode>() {
-            @Override
-            public BTreeNode perform(ByteBuffer data) {
-                byte type = data.get();
-                data.rewind();
-                BTreeNode node;
-                if (type == TYPE_INTERNAL) {
-                    node = new InternalNode(txContext, ref);
-                } else if (type == TYPE_LEAF) {
-                    node = new LeafNode(txContext, ref);
-                } else {
-                    throw new IllegalStateException("Unknown node type: " + type);
-                }
-                node.load();
-                return node;
+        return txContext.read(ref, data -> {
+            byte type = data.get();
+            data.rewind();
+            BTreeNode node;
+            if (type == TYPE_INTERNAL) {
+                node = new InternalNode(txContext, ref);
+            } else if (type == TYPE_LEAF) {
+                node = new LeafNode(txContext, ref);
+            } else {
+                throw new IllegalStateException("Unknown node type: " + type);
             }
+            node.load();
+            return node;
         });
     }
 

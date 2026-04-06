@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
-import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
 import com.google.common.collect.Iterables;
@@ -95,15 +94,12 @@ public class SinfoniaList<E> extends AbstractList<E> {
             ItemManagerFactory factory,
             BucketReader<E> reader,
             BucketWriter<E> writer) {
-        txContext.write(headerRef, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_SIZE);
-                data.putInt(0);
-                headerRef.toByteBuffer(data);
-                headerRef.toByteBuffer(data);
-                return null;
-            }
+        txContext.write(headerRef, data -> {
+            data.position(HEADER_OFFSET_SIZE);
+            data.putInt(0);
+            headerRef.toByteBuffer(data);
+            headerRef.toByteBuffer(data);
+            return null;
         });
         return new SinfoniaList<>(
                 headerRef, txContext, factory, reader, writer);
@@ -161,12 +157,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
 
     @Override
     public int size() {
-        return txContext.read(headerRef, new DataOperation<Integer>() {
-            @Override
-            public Integer perform(ByteBuffer data) {
-                return data.getInt(HEADER_OFFSET_SIZE);
-            }
-        });
+        return txContext.read(headerRef, data -> data.getInt(HEADER_OFFSET_SIZE));
     }
 
     @Override
@@ -196,28 +187,19 @@ public class SinfoniaList<E> extends AbstractList<E> {
             return false;
         }
         final Iterable<E> entries = Iterables.concat(txContext.read(bucketRef,
-                new DataOperation<Iterable<E>>() {
-                    @Override
-                    public Iterable<E> perform(ByteBuffer data) {
-                        data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
-                        return reader.read(data.slice());
-                    }
+                data -> {
+                    data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
+                    return reader.read(data.slice());
         }), Collections.singleton(e));
-        int num = txContext.write(bucketRef, new DataOperation<Integer>() {
-            @Override
-            public Integer perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
-                return writer.write(entries, data.slice());
-            }
+        int num = txContext.write(bucketRef, data -> {
+            data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
+            return writer.write(entries, data.slice());
         });
         if (Iterables.size(entries) == num) {
-            txContext.write(headerRef, new DataOperation<Void>() {
-                @Override
-                public Void perform(ByteBuffer data) {
-                    data.putInt(HEADER_OFFSET_SIZE,
-                            data.getInt(HEADER_OFFSET_SIZE) + 1);
-                    return null;
-                }
+            txContext.write(headerRef, data -> {
+                data.putInt(HEADER_OFFSET_SIZE,
+                        data.getInt(HEADER_OFFSET_SIZE) + 1);
+                return null;
             });
             return true;
         }
@@ -234,22 +216,16 @@ public class SinfoniaList<E> extends AbstractList<E> {
         final ItemReference newTail = mgr.alloc();
         ItemReference oldTail = setTailRef(newTail);
         // link new tail to header
-        txContext.write(newTail, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                headerRef.toByteBuffer(data);
-                return null;
-            }
+        txContext.write(newTail, data -> {
+            headerRef.toByteBuffer(data);
+            return null;
         });
         if (oldTail.equals(headerRef)) {
             setHeadRef(newTail);
         } else {
-            txContext.write(oldTail, new DataOperation<Void>() {
-                @Override
-                public Void perform(ByteBuffer data) {
-                    newTail.toByteBuffer(data);
-                    return null;
-                }
+            txContext.write(oldTail, data -> {
+                newTail.toByteBuffer(data);
+                return null;
             });
         }
         return newTail;
@@ -272,13 +248,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
                     throw new NoSuchElementException();
                 }
                 Iterator<E> next = nextIt;
-                nextBucketRef = txContext.read(nextBucketRef,
-                        new DataOperation<ItemReference>() {
-                            @Override
-                            public ItemReference perform(ByteBuffer data) {
-                                return ItemReference.fromBuffer(data);
-                            }
-                });
+                nextBucketRef = txContext.read(nextBucketRef, data -> ItemReference.fromBuffer(data));
                 nextIt = getIterator();
                 return next;
             }
@@ -292,12 +262,9 @@ public class SinfoniaList<E> extends AbstractList<E> {
                 if (nextBucketRef.equals(headerRef)) {
                     return null;
                 }
-                return txContext.read(nextBucketRef, new DataOperation<Iterator<E>>() {
-                    @Override
-                    public Iterator<E> perform(ByteBuffer data) {
-                        data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
-                        return reader.read(data.slice()).iterator();
-                    }
+                return txContext.read(nextBucketRef, data -> {
+                    data.position(HEADER_OFFSET_BUCKET_PAYLOAD);
+                    return reader.read(data.slice()).iterator();
                 });
             }
 
@@ -305,48 +272,36 @@ public class SinfoniaList<E> extends AbstractList<E> {
     }
 
     private ItemReference getHeadRef() {
-        return txContext.read(headerRef, new DataOperation<ItemReference>() {
-            @Override
-            public ItemReference perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_HEAD);
-                return ItemReference.fromBuffer(data);
-            }
+        return txContext.read(headerRef, data -> {
+            data.position(HEADER_OFFSET_HEAD);
+            return ItemReference.fromBuffer(data);
         });
     }
 
     private ItemReference setHeadRef(final ItemReference ref) {
-        return txContext.write(headerRef, new DataOperation<ItemReference>() {
-            @Override
-            public ItemReference perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_HEAD);
-                ItemReference currentHead = ItemReference.fromBuffer(data);
-                data.position(HEADER_OFFSET_HEAD);
-                ref.toByteBuffer(data);
-                return currentHead;
-            }
+        return txContext.write(headerRef, data -> {
+            data.position(HEADER_OFFSET_HEAD);
+            ItemReference currentHead = ItemReference.fromBuffer(data);
+            data.position(HEADER_OFFSET_HEAD);
+            ref.toByteBuffer(data);
+            return currentHead;
         });
     }
 
     private ItemReference getTailRef() {
-        return txContext.read(headerRef, new DataOperation<ItemReference>() {
-            @Override
-            public ItemReference perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_TAIL);
-                return ItemReference.fromBuffer(data);
-            }
+        return txContext.read(headerRef, data -> {
+            data.position(HEADER_OFFSET_TAIL);
+            return ItemReference.fromBuffer(data);
         });
     }
 
     private ItemReference setTailRef(final ItemReference ref) {
-        return txContext.write(headerRef, new DataOperation<ItemReference>() {
-            @Override
-            public ItemReference perform(ByteBuffer data) {
-                data.position(HEADER_OFFSET_TAIL);
-                ItemReference currentTail = ItemReference.fromBuffer(data);
-                data.position(HEADER_OFFSET_TAIL);
-                ref.toByteBuffer(data);
-                return currentTail;
-            }
+        return txContext.write(headerRef, data -> {
+            data.position(HEADER_OFFSET_TAIL);
+            ItemReference currentTail = ItemReference.fromBuffer(data);
+            data.position(HEADER_OFFSET_TAIL);
+            ref.toByteBuffer(data);
+            return currentTail;
         });
     }
 }

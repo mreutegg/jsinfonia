@@ -62,27 +62,18 @@ public class RollingRedoLog implements RedoLog, Closeable {
         this.memoryNode = memoryNode;
         this.file = file;
         File dir = file.getParentFile();
-        File[] logFiles = dir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(file.getName() + ".");
-            }
-        });
+        File[] logFiles = dir.listFiles((dir1, name) -> name.startsWith(file.getName() + "."));
         if (logFiles == null) {
             throw new IOException("Not a directory: " + file.getPath());
         }
-        Arrays.sort(logFiles, new Comparator<File>() {
-            @Override
-            public int compare(File o1, File o2) {
-                Integer logIdx1 = Integer.parseInt(o1.getName().substring(
-                        file.getName().length() + 1));
-                Integer logIdx2 = Integer.parseInt(o2.getName().substring(
-                        file.getName().length() + 1));
-                nextLogIndex = Math.max(nextLogIndex, logIdx1);
-                nextLogIndex = Math.max(nextLogIndex, logIdx2);
-                return logIdx1.compareTo(logIdx2);
-            }
-
+        Arrays.sort(logFiles, (o1, o2) -> {
+            Integer logIdx1 = Integer.parseInt(o1.getName().substring(
+                    file.getName().length() + 1));
+            Integer logIdx2 = Integer.parseInt(o2.getName().substring(
+                    file.getName().length() + 1));
+            nextLogIndex = Math.max(nextLogIndex, logIdx1);
+            nextLogIndex = Math.max(nextLogIndex, logIdx2);
+            return logIdx1.compareTo(logIdx2);
         });
         for (File logFile : logFiles) {
             redoLogs.add(new FileRedoLog(memoryNode, logFile));
@@ -90,23 +81,19 @@ public class RollingRedoLog implements RedoLog, Closeable {
         if (redoLogs.isEmpty()) {
             addRedoLog();
         }
-        this.logCleaner = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!stopCleaner.get()) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
-                    try {
-                        maybeCleanupLogs();
-                    } catch (IOException e) {
-                        log.warn("exception cleaning up logs", e);
-                    }
+        this.logCleaner = new Thread(() -> {
+            while (!stopCleaner.get()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+                try {
+                    maybeCleanupLogs();
+                } catch (IOException e) {
+                    log.warn("exception cleaning up logs", e);
                 }
             }
-
         }, "RollingRedoLog Cleaner");
         this.logCleaner.start();
     }

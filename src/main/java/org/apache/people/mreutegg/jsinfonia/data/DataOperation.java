@@ -17,7 +17,8 @@ package org.apache.people.mreutegg.jsinfonia.data;
 
 import java.nio.ByteBuffer;
 
+@FunctionalInterface
 public interface DataOperation<T> {
 
-    public T perform(ByteBuffer data);
+    T perform(ByteBuffer data);
 }

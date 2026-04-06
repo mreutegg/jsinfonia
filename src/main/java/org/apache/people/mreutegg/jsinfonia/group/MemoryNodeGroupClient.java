@@ -64,14 +64,9 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
             new HashMap<String, SettableFuture<ResultMessage>>());
 
     public MemoryNodeGroupClient(final int memoryNodeId) throws Exception {
-        this.executor =  Executors.newCachedThreadPool(new ThreadFactory() {
-            private final AtomicInteger numThreads = new AtomicInteger();
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, MemoryNodeGroupClient.class.getSimpleName() +
-                        "-" + memoryNodeId + "-Thread-" + numThreads.getAndIncrement());
-            }
-        });
+        final AtomicInteger numThreads = new AtomicInteger();
+        this.executor =  Executors.newCachedThreadPool(r -> new Thread(r, MemoryNodeGroupClient.class.getSimpleName() +
+                "-" + memoryNodeId + "-Thread-" + numThreads.getAndIncrement()));
         this.memoryNodeId = memoryNodeId;
         this.channel = new JChannel("org/apache/people/mreutegg/jsinfonia/group/jgroups.xml");
         this.channel.setName("MemoryNodeGroupClient");
@@ -92,16 +87,13 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
         final SettableFuture<ResultMessage> future = SettableFuture.create();
         pendingResults.put(tx.getTxId(), future);
         try {
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        // TODO: send message to MemoryNodeGroupMembers only
-                        channel.send(ExecuteAndPrepareMessage.fromMiniTransaction(
-                                tx, memoryNodeIds));
-                    } catch (Exception e) {
-                        future.setException(e);
-                    }
+            executor.submit(() -> {
+                try {
+                    // TODO: send message to MemoryNodeGroupMembers only
+                    channel.send(ExecuteAndPrepareMessage.fromMiniTransaction(
+                            tx, memoryNodeIds));
+                } catch (Exception e) {
+                    future.setException(e);
                 }
             });
             ResultMessage r = future.get();
@@ -122,13 +114,10 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
 
     @Override
     public void commit(final String txId, final boolean commit) {
-        executor.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                // TODO: send message to MemoryNodeGroupMembers only
-                channel.send(CommitMessage.fromString(txId, commit));
-                return null;
-            }
+        executor.submit(() -> {
+            // TODO: send message to MemoryNodeGroupMembers only
+            channel.send(CommitMessage.fromString(txId, commit));
+            return null;
         });
     }
 

@@ -17,6 +17,7 @@ package org.apache.people.mreutegg.jsinfonia.util;
 
 import java.nio.ByteBuffer;
 
+@FunctionalInterface
 public interface BucketWriter<E> {
 
     /**
@@ -29,5 +30,5 @@ public interface BucketWriter<E> {
      * @param data the destination buffer.
      * @return the number of entries written.
      */
-    public int write(Iterable<E> entries, ByteBuffer data);
+    int write(Iterable<E> entries, ByteBuffer data);
 }

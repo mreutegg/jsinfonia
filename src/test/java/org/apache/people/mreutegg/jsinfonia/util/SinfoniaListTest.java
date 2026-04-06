@@ -62,26 +62,19 @@ public class SinfoniaListTest {
         appNode = new SimpleApplicationNode(directory, EXECUTOR);
         txMgr = createTransactionManager();
         // initialize item manager & factory
-        final List<ItemReference> itemMgrHeaderRefs = txMgr.execute(
-                new Transaction<List<ItemReference>>() {
-            @Override
-            public List<ItemReference> perform(TransactionContext txContext) {
-                List<ItemReference> headerRefs = new ArrayList<>();
-                for (int i = 0; i < NUM_MEMORY_NODES; i++) {
-                    headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
-                }
-                return headerRefs;
+        final List<ItemReference> itemMgrHeaderRefs = txMgr.execute(txContext -> {
+            List<ItemReference> headerRefs = new ArrayList<>();
+            for (int i = 0; i < NUM_MEMORY_NODES; i++) {
+                headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
             }
+            return headerRefs;
         });
-        itemMgrFactory = new ItemManagerFactory() {
-            @Override
-            public ItemManager createItemManager(TransactionContext txContext) {
-                Map<Integer, ItemManager> itemMgrs = new HashMap<>();
-                for (ItemReference r : itemMgrHeaderRefs) {
-                    itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
-                }
-                return new CompositeItemManager(itemMgrs);
+        itemMgrFactory = txContext -> {
+            Map<Integer, ItemManager> itemMgrs = new HashMap<>();
+            for (ItemReference r : itemMgrHeaderRefs) {
+                itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
             }
+            return new CompositeItemManager(itemMgrs);
         };
     }
 
@@ -115,41 +108,31 @@ public class SinfoniaListTest {
     }
 
     private List<Integer> createList() {
-        return txMgr.execute(new Transaction<List<Integer>>() {
-            @Override
-            public List<Integer> perform(TransactionContext txContext) {
-                ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
-                return SinfoniaList.newList(ref, txContext, itemMgrFactory,
-                        new BucketReader<Integer>() {
-                            @Override
-                            public Iterable<Integer> read(ByteBuffer data) {
-                                char num = data.getChar();
-                                List<Integer> items = new ArrayList<>();
-                                while (num-- > 0) {
-                                    items.add(data.getInt());
-                                }
-                                return items;
+        return txMgr.execute(txContext -> {
+            ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
+            return SinfoniaList.newList(ref, txContext, itemMgrFactory,
+                    data -> {
+                        char num = data.getChar();
+                        List<Integer> items = new ArrayList<>();
+                        while (num-- > 0) {
+                            items.add(data.getInt());
+                        }
+                        return items;
+                    },
+                    (entries, data) -> {
+                        char num = 0;
+                        data.putChar(num);
+                        try {
+                            for (Integer j : entries) {
+                                data.putInt(j);
+                                num++;
                             }
-                        },
-                        new BucketWriter<Integer>() {
-                            @Override
-                            public int write(Iterable<Integer> entries,
-                                    ByteBuffer data) {
-                                char num = 0;
-                                data.putChar(num);
-                                try {
-                                    for (Integer i : entries) {
-                                        data.putInt(i);
-                                        num++;
-                                    }
-                                } catch (BufferOverflowException e) {
-                                    // stop writing more entries
-                                }
-                                data.putChar(0, num);
-                                return num;
-                            }
-                        });
-            }
+                        } catch (BufferOverflowException e) {
+                            // stop writing more entries
+                        }
+                        data.putChar(0, num);
+                        return num;
+                    });
         });
     }
 

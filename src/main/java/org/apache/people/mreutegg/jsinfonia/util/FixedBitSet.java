@@ -110,12 +110,7 @@ public class FixedBitSet {
                     (int) Character.MAX_VALUE + " dataItemRefs");
         }
         // check if dataItemRefs fit into the header item
-        int dataSize = context.read(headerRef, new DataOperation<Integer>() {
-            @Override
-            public Integer perform(ByteBuffer data) {
-                return data.remaining();
-            }
-        });
+        int dataSize = context.read(headerRef, data -> data.remaining());
         if (dataItemRefs.size() * 12 > dataSize - META_LENGTH) {
             throw new IllegalArgumentException("Not enough space in header item (" +
                     (dataSize - META_LENGTH) + ") to store " + dataItemRefs.size() +
@@ -126,13 +121,10 @@ public class FixedBitSet {
         int maxWords = 0;
         int i = 0;
         for (ItemReference r : dataItemRefs) {
-            numWords[i] += context.read(r, new DataOperation<Integer>() {
-                @Override
-                public Integer perform(ByteBuffer data) {
-                    // bits are stored as longs, find out how
-                    // many long values fit into remaining space
-                    return data.remaining() / 8;
-                }
+            numWords[i] += context.read(r, data -> {
+                // bits are stored as longs, find out how
+                // many long values fit into remaining space
+                return data.remaining() / 8;
             });
             maxWords += numWords[i++];
         }
@@ -141,28 +133,25 @@ public class FixedBitSet {
                     length + " > " + (maxWords * 64));
         }
         // otherwise write dataItemRefs
-        context.write(headerRef, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.putChar(OFFSET_NUM_REFS, (char) dataItemRefs.size());
-                // starts/offsets
-                data.position(META_LENGTH);
-                int maxWords = 0;
-                for (int i : numWords) {
-                    maxWords += i;
-                    data.putInt(i);
-                }
-                for (ItemReference r : dataItemRefs) {
-                    data.putInt(r.getMemoryNodeId());
-                    data.putInt(r.getAddress());
-                }
-                int numBits = maxWords * 64;
-                if (length >= 0) {
-                    numBits = Math.min(length, numBits);
-                }
-                data.putInt(OFFSET_NUM_BITS, numBits);
-                return null;
+        context.write(headerRef, data -> {
+            data.putChar(OFFSET_NUM_REFS, (char) dataItemRefs.size());
+            // starts/offsets
+            data.position(META_LENGTH);
+            int totalWords = 0;
+            for (int j : numWords) {
+                totalWords += j;
+                data.putInt(j);
             }
+            for (ItemReference r : dataItemRefs) {
+                data.putInt(r.getMemoryNodeId());
+                data.putInt(r.getAddress());
+            }
+            int numBits = totalWords * 64;
+            if (length >= 0) {
+                numBits = Math.min(length, numBits);
+            }
+            data.putInt(OFFSET_NUM_BITS, numBits);
+            return null;
         });
     }
 
@@ -272,69 +261,50 @@ public class FixedBitSet {
 
     private void setBit(int index, final long bitMask) {
         final BitsReference ref = getBitsReference(index);
-        context.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                long bits = data.getLong(ref.subIndex * 8);
-                bits |= bitMask;
-                data.putLong(ref.subIndex * 8, bits);
-                return null;
-            }
+        context.write(ref, data -> {
+            long bits = data.getLong(ref.subIndex * 8);
+            bits |= bitMask;
+            data.putLong(ref.subIndex * 8, bits);
+            return null;
         });
     }
 
     private void clearBit(int index, final long bitMask) {
         final BitsReference ref = getBitsReference(index);
-        context.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                long bits = data.getLong(ref.subIndex * 8);
-                bits &= ~bitMask;
-                data.putLong(ref.subIndex * 8, bits);
-                return null;
-            }
+        context.write(ref, data -> {
+            long bits = data.getLong(ref.subIndex * 8);
+            bits &= ~bitMask;
+            data.putLong(ref.subIndex * 8, bits);
+            return null;
         });
     }
 
     private long getBits(int index) {
         final BitsReference ref = getBitsReference(index);
-        return context.read(ref, new DataOperation<Long>() {
-            @Override
-            public Long perform(ByteBuffer data) {
-                return data.getLong(ref.subIndex * 8);
-            }
-        });
+        return context.read(ref, data -> data.getLong(ref.subIndex * 8));
     }
 
     private BitsReference getBitsReference(final int index) {
-        return context.read(headerRef, new DataOperation<BitsReference>() {
-            @Override
-            public BitsReference perform(ByteBuffer data) {
-                int numRefs = data.getChar(OFFSET_NUM_REFS);
-                data.position(META_LENGTH);
-                int starts[] = new int[numRefs + 1];
-                int maxWords = 0;
-                for (int i = 0; i < numRefs; i++) {
-                    starts[i] = maxWords;
-                    maxWords += data.getInt();
-                }
-                starts[numRefs] = maxWords;
-                int itemIndex = subItem(index, starts);
-                int subIndex = index - starts[itemIndex];
-                // log.debug("BitsReference for index " + index + ": itemIndex" + itemIndex + ", subIndex: " + subIndex);
-                data.position(META_LENGTH + numRefs * 4 + itemIndex * 8);
-                return new BitsReference(data.getInt(), data.getInt(), subIndex);
+        return context.read(headerRef, data -> {
+            int numRefs = data.getChar(OFFSET_NUM_REFS);
+            data.position(META_LENGTH);
+            int starts[] = new int[numRefs + 1];
+            int totalWords = 0;
+            for (int k = 0; k < numRefs; k++) {
+                starts[k] = totalWords;
+                totalWords += data.getInt();
             }
+            starts[numRefs] = totalWords;
+            int itemIndex = subItem(index, starts);
+            int subIndex = index - starts[itemIndex];
+            // log.debug("BitsReference for index " + index + ": itemIndex" + itemIndex + ", subIndex: " + subIndex);
+            data.position(META_LENGTH + numRefs * 4 + itemIndex * 8);
+            return new BitsReference(data.getInt(), data.getInt(), subIndex);
         });
     }
 
     private int getNumBits() {
-        return context.read(headerRef, new DataOperation<Integer>() {
-            @Override
-            public Integer perform(ByteBuffer data) {
-                return data.getInt(OFFSET_NUM_BITS);
-            }
-        });
+        return context.read(headerRef, data -> data.getInt(OFFSET_NUM_BITS));
     }
 
     private static int subItem(int n, int[] itemStarts) {

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
  *
  * @param <E> the entry type.
  */
+@FunctionalInterface
 public interface BucketReader<E> {
 
     /**

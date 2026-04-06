@@ -94,36 +94,33 @@ public class FileRedoLog implements RedoLog, Closeable {
         this.readFile = new RandomAccessFile(file, "r");
         this.readChannel = readFile.getChannel();
         runRecovery();
-        this.syncThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<SettableFuture<Boolean>> futures = Lists.newArrayList();
-                while (!shutdown.get()) {
-                    futures.clear();
-                    try {
-                        syncQueue.drainTo(futures);
-                        if (futures.isEmpty()) {
-                            SettableFuture<Boolean> f = syncQueue.poll(100, TimeUnit.MILLISECONDS);
-                            if (f != null) {
-                                futures.add(f);
-                            }
+        this.syncThread = new Thread(() -> {
+            List<SettableFuture<Boolean>> futures = Lists.newArrayList();
+            while (!shutdown.get()) {
+                futures.clear();
+                try {
+                    syncQueue.drainTo(futures);
+                    if (futures.isEmpty()) {
+                        SettableFuture<Boolean> f = syncQueue.poll(100, TimeUnit.MILLISECONDS);
+                        if (f != null) {
+                            futures.add(f);
                         }
-                        if (!futures.isEmpty()) {
-                            try {
-                                syncCount++;
-                                FileRedoLog.this.file.getChannel().force(false);
-                                for (SettableFuture<Boolean> f : futures) {
-                                    f.set(true);
-                                }
-                            } catch (IOException e) {
-                                for (SettableFuture<Boolean> f : futures) {
-                                    f.setException(e);
-                                }
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
                     }
+                    if (!futures.isEmpty()) {
+                        try {
+                            syncCount++;
+                            FileRedoLog.this.file.getChannel().force(false);
+                            for (SettableFuture<Boolean> f : futures) {
+                                f.set(true);
+                            }
+                        } catch (IOException e) {
+                            for (SettableFuture<Boolean> f : futures) {
+                                f.setException(e);
+                            }
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
         });

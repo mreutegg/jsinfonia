@@ -73,12 +73,7 @@ public class ItemManagerImpl implements ItemManager {
     public static ItemReference initialize(TransactionContext txContext,
             int memoryNodeId, int addressSpace) {
         // find out what the item data size is
-        int itemSize = txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
-            @Override
-            public Integer perform(ByteBuffer data) {
-                return data.remaining();
-            }
-        });
+        int itemSize = txContext.read(new ItemReference(0, 0), ByteBuffer::remaining);
         int bitsPerItem = (itemSize / 8) * 64;
         // required number of dataItems to cover addressSpace
         int dataItems = addressSpace / bitsPerItem;
@@ -125,12 +120,9 @@ public class ItemManagerImpl implements ItemManager {
         allocations.set(address);
         ItemReference ref = new ItemReference(headerRef.getMemoryNodeId(), address);
         // clear data
-        txContext.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.put(getZeros(data.remaining()), 0, data.remaining());
-                return null;
-            }
+        txContext.write(ref, data -> {
+            data.put(getZeros(data.remaining()), 0, data.remaining());
+            return null;
         });
         return ref;
     }

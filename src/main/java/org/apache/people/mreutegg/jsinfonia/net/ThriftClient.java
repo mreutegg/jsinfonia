@@ -99,6 +99,7 @@ public abstract class ThriftClient<C> implements Closeable {
         }
     }
 
+    @FunctionalInterface
     protected interface ClientCallable<T, C, E extends Throwable> {
 
         T call(C client) throws E;

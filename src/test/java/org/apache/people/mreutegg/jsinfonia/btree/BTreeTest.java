@@ -42,29 +42,16 @@ public class BTreeTest extends AbstractTransactionTest {
     public void setUp() throws Exception {
         super.setUp();
         TransactionManager txManager = createTransactionContext();
-        itemManagerRef = txManager.execute(new Transaction<ItemReference>() {
-            @Override
-            public ItemReference perform(TransactionContext txContext) {
-                return ItemManagerImpl.initialize(txContext, 0, 1024);
-            }
-        });
-        btreeMetadataRef = txManager.execute(new Transaction<ItemReference>() {
-            @Override
-            public ItemReference perform(TransactionContext txContext) {
-                ItemManager itemMgr = new ItemManagerImpl(txContext, itemManagerRef);
-                return itemMgr.alloc();
-            }
+        itemManagerRef = txManager.execute(txContext -> ItemManagerImpl.initialize(txContext, 0, 1024));
+        btreeMetadataRef = txManager.execute(txContext -> {
+            ItemManager itemMgr = new ItemManagerImpl(txContext, itemManagerRef);
+            return itemMgr.alloc();
         });
     }
 
     public void testInsertAndLookup() {
         TransactionManager txManager = createTransactionContext();
-        ItemManagerFactory factory = new ItemManagerFactory() {
-            @Override
-            public ItemManager createItemManager(TransactionContext txContext) {
-                return new ItemManagerImpl(txContext, itemManagerRef);
-            }
-        };
+        ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
         BTree btree = new BTree(txManager, factory, btreeMetadataRef);
         btree.initialize();
 
@@ -78,12 +65,7 @@ public class BTreeTest extends AbstractTransactionTest {
 
     public void testSplit() {
         TransactionManager txManager = createTransactionContext();
-        ItemManagerFactory factory = new ItemManagerFactory() {
-            @Override
-            public ItemManager createItemManager(TransactionContext txContext) {
-                return new ItemManagerImpl(txContext, itemManagerRef);
-            }
-        };
+        ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
         // Small maxKeys to trigger split early
         BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
         btree.initialize();
@@ -100,12 +82,7 @@ public class BTreeTest extends AbstractTransactionTest {
 
     public void testUpdate() {
         TransactionManager txManager = createTransactionContext();
-        ItemManagerFactory factory = new ItemManagerFactory() {
-            @Override
-            public ItemManager createItemManager(TransactionContext txContext) {
-                return new ItemManagerImpl(txContext, itemManagerRef);
-            }
-        };
+        ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
         BTree btree = new BTree(txManager, factory, btreeMetadataRef);
         btree.initialize();
 
@@ -118,12 +95,7 @@ public class BTreeTest extends AbstractTransactionTest {
 
     public void testDelete() {
         TransactionManager txManager = createTransactionContext();
-        ItemManagerFactory factory = new ItemManagerFactory() {
-            @Override
-            public ItemManager createItemManager(TransactionContext txContext) {
-                return new ItemManagerImpl(txContext, itemManagerRef);
-            }
-        };
+        ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
         BTree btree = new BTree(txManager, factory, btreeMetadataRef);
         btree.initialize();
 

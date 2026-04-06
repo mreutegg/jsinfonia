@@ -44,95 +44,83 @@ public class BTree {
     }
 
     public void initialize() {
-        txManager.execute(new Transaction<Void>() {
-            @Override
-            public Void perform(TransactionContext txContext) {
-                ItemManager itemMgr = factory.createItemManager(txContext);
-                ItemReference rootRef = itemMgr.alloc();
-                LeafNode root = new LeafNode(txContext, rootRef);
-                root.save();
-                Metadata metadata = new Metadata(txContext, headerRef);
-                metadata.initialize(rootRef);
-                return null;
-            }
+        txManager.execute(txContext -> {
+            ItemManager itemMgr = factory.createItemManager(txContext);
+            ItemReference rootRef = itemMgr.alloc();
+            LeafNode root = new LeafNode(txContext, rootRef);
+            root.save();
+            Metadata metadata = new Metadata(txContext, headerRef);
+            metadata.initialize(rootRef);
+            return null;
         });
     }
 
     public byte[] lookup(final String key) {
-        return txManager.execute(new Transaction<byte[]>() {
-            @Override
-            public byte[] perform(TransactionContext txContext) {
-                Metadata metadata = new Metadata(txContext, headerRef);
-                BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
-                while (node instanceof InternalNode) {
-                    InternalNode internal = (InternalNode) node;
-                    int i = Collections.binarySearch(internal.keys, key);
-                    if (i < 0) {
-                        i = -i - 1;
-                    } else {
-                        i++;
-                    }
-                    node = BTreeNode.load(txContext, internal.getChild(i));
+        return txManager.execute(txContext -> {
+            Metadata metadata = new Metadata(txContext, headerRef);
+            BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
+            while (node instanceof InternalNode) {
+                InternalNode internal = (InternalNode) node;
+                int i = Collections.binarySearch(internal.keys, key);
+                if (i < 0) {
+                    i = -i - 1;
+                } else {
+                    i++;
                 }
-                LeafNode leaf = (LeafNode) node;
-                int i = Collections.binarySearch(leaf.keys, key);
-                if (i >= 0) {
-                    return leaf.getValue(i);
-                }
-                return null;
+                node = BTreeNode.load(txContext, internal.getChild(i));
             }
+            LeafNode leaf = (LeafNode) node;
+            int i = Collections.binarySearch(leaf.keys, key);
+            if (i >= 0) {
+                return leaf.getValue(i);
+            }
+            return null;
         });
     }
 
     public boolean update(final String key, final byte[] value) {
-        return txManager.execute(new Transaction<Boolean>() {
-            @Override
-            public Boolean perform(TransactionContext txContext) {
-                Metadata metadata = new Metadata(txContext, headerRef);
-                BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
-                while (node instanceof InternalNode) {
-                    InternalNode internal = (InternalNode) node;
-                    int i = Collections.binarySearch(internal.keys, key);
-                    if (i < 0) {
-                        i = -i - 1;
-                    } else {
-                        i++;
-                    }
-                    node = BTreeNode.load(txContext, internal.getChild(i));
+        return txManager.execute(txContext -> {
+            Metadata metadata = new Metadata(txContext, headerRef);
+            BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
+            while (node instanceof InternalNode) {
+                InternalNode internal = (InternalNode) node;
+                int i = Collections.binarySearch(internal.keys, key);
+                if (i < 0) {
+                    i = -i - 1;
+                } else {
+                    i++;
                 }
-                LeafNode leaf = (LeafNode) node;
-                int i = Collections.binarySearch(leaf.keys, key);
-                if (i >= 0) {
-                    leaf.updateValue(i, value);
-                    leaf.save();
-                    return true;
-                }
-                return false;
+                node = BTreeNode.load(txContext, internal.getChild(i));
             }
+            LeafNode leaf = (LeafNode) node;
+            int i = Collections.binarySearch(leaf.keys, key);
+            if (i >= 0) {
+                leaf.updateValue(i, value);
+                leaf.save();
+                return true;
+            }
+            return false;
         });
     }
 
     public void insert(final String key, final byte[] value) {
-        txManager.execute(new Transaction<Void>() {
-            @Override
-            public Void perform(TransactionContext txContext) {
-                Metadata metadata = new Metadata(txContext, headerRef);
-                ItemReference rootRef = metadata.getRootNodeRef();
-                BTreeNode root = BTreeNode.load(txContext, rootRef);
-                if (root.getKeyCount() == maxKeys) {
-                    ItemManager itemMgr = factory.createItemManager(txContext);
-                    ItemReference newRootRef = itemMgr.alloc();
-                    InternalNode newRoot = new InternalNode(txContext, newRootRef);
-                    newRoot.addChild(0, rootRef);
-                    splitChild(txContext, itemMgr, newRoot, 0, root);
-                    metadata.setRootNodeRef(newRootRef);
-                    newRoot.save();
-                    insertNonFull(txContext, itemMgr, newRoot, key, value);
-                } else {
-                    insertNonFull(txContext, factory.createItemManager(txContext), root, key, value);
-                }
-                return null;
+        txManager.execute(txContext -> {
+            Metadata metadata = new Metadata(txContext, headerRef);
+            ItemReference rootRef = metadata.getRootNodeRef();
+            BTreeNode root = BTreeNode.load(txContext, rootRef);
+            if (root.getKeyCount() == maxKeys) {
+                ItemManager itemMgr = factory.createItemManager(txContext);
+                ItemReference newRootRef = itemMgr.alloc();
+                InternalNode newRoot = new InternalNode(txContext, newRootRef);
+                newRoot.addChild(0, rootRef);
+                splitChild(txContext, itemMgr, newRoot, 0, root);
+                metadata.setRootNodeRef(newRootRef);
+                newRoot.save();
+                insertNonFull(txContext, itemMgr, newRoot, key, value);
+            } else {
+                insertNonFull(txContext, factory.createItemManager(txContext), root, key, value);
             }
+            return null;
         });
     }
 
@@ -198,32 +186,29 @@ public class BTree {
     }
 
     public boolean delete(final String key) {
-        return txManager.execute(new Transaction<Boolean>() {
-            @Override
-            public Boolean perform(TransactionContext txContext) {
-                // Simplified delete: just find and remove from leaf.
-                // In a real B-Tree, we should rebalance.
-                Metadata metadata = new Metadata(txContext, headerRef);
-                BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
-                while (node instanceof InternalNode) {
-                    InternalNode internal = (InternalNode) node;
-                    int i = Collections.binarySearch(internal.keys, key);
-                    if (i < 0) {
-                        i = -i - 1;
-                    } else {
-                        i++;
-                    }
-                    node = BTreeNode.load(txContext, internal.getChild(i));
+        return txManager.execute(txContext -> {
+            // Simplified delete: just find and remove from leaf.
+            // In a real B-Tree, we should rebalance.
+            Metadata metadata = new Metadata(txContext, headerRef);
+            BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
+            while (node instanceof InternalNode) {
+                InternalNode internal = (InternalNode) node;
+                int i = Collections.binarySearch(internal.keys, key);
+                if (i < 0) {
+                    i = -i - 1;
+                } else {
+                    i++;
                 }
-                LeafNode leaf = (LeafNode) node;
-                int i = Collections.binarySearch(leaf.keys, key);
-                if (i >= 0) {
-                    leaf.removeEntry(i);
-                    leaf.save();
-                    return true;
-                }
-                return false;
+                node = BTreeNode.load(txContext, internal.getChild(i));
             }
+            LeafNode leaf = (LeafNode) node;
+            int i = Collections.binarySearch(leaf.keys, key);
+            if (i >= 0) {
+                leaf.removeEntry(i);
+                leaf.save();
+                return true;
+            }
+            return false;
         });
     }
 

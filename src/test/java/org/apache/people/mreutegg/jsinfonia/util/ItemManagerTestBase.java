@@ -25,10 +25,8 @@ import java.util.concurrent.Executors;
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.DataItemCache;
-import org.apache.people.mreutegg.jsinfonia.data.Transaction;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
-import org.apache.people.mreutegg.jsinfonia.util.ItemManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,60 +49,43 @@ public abstract class ItemManagerTestBase extends TestCase {
         TransactionManager txMgr = new TransactionManager(
                 appNode, new DataItemCache(128));
 
-        txMgr.execute(new Transaction<ItemManager>() {
-            @Override
-            public ItemManager perform(TransactionContext txContext) {
-                return initializeItemManager(txContext);
-            }
-        });
+        txMgr.execute(txContext -> initializeItemManager(txContext));
 
-        final List<ItemReference> refs = txMgr.execute(new Transaction<List<ItemReference>>() {
-            @Override
-            public List<ItemReference> perform(TransactionContext txContext) {
-                ItemManager itemManager = getItemManager(txContext);
-                List<ItemReference> refs = new ArrayList<>();
-                ItemReference ref;
-                while ((ref = itemManager.alloc()) != null) {
-                    refs.add(ref);
-                }
-                return refs;
+        final List<ItemReference> refs = txMgr.execute(txContext -> {
+            ItemManager itemManager = getItemManager(txContext);
+            List<ItemReference> r = new ArrayList<>();
+            ItemReference ref;
+            while ((ref = itemManager.alloc()) != null) {
+                r.add(ref);
             }
+            return r;
         });
         int numRefs = refs.size();
         // free all
-        txMgr.execute(new Transaction<Void>() {
-            @Override
-            public Void perform(TransactionContext txContext) {
-                ItemManager itemManager = getItemManager(txContext);
-                for (ItemReference ref : refs) {
-                    itemManager.free(ref);
-                }
-                return null;
+        txMgr.execute(txContext -> {
+            ItemManager itemManager = getItemManager(txContext);
+            for (ItemReference ref : refs) {
+                itemManager.free(ref);
             }
+            return null;
         });
 
         final List<Integer> allocs = Collections.synchronizedList(new ArrayList<Integer>());
         List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            workers.add(new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    TransactionManager txMgr = new TransactionManager(
-                            appNode, new DataItemCache(128));
-                    int numAllocs = 0;
-                    ItemReference ref;
-                    while ((ref = txMgr.execute(new Transaction<ItemReference>() {
-                            @Override
-                            public ItemReference perform(TransactionContext txContext) {
-                                ItemManager itemManager = getItemManager(txContext);
-                                return itemManager.alloc();
-                            }
-                        })) != null) {
-                        numAllocs++;
-                        log.debug("alloc() : " + ref);
-                    }
-                    allocs.add(numAllocs);
+            workers.add(new Thread(() -> {
+                TransactionManager tm = new TransactionManager(
+                        appNode, new DataItemCache(128));
+                int numAllocs = 0;
+                ItemReference ref;
+                while ((ref = tm.execute(txContext -> {
+                        ItemManager itemManager = getItemManager(txContext);
+                        return itemManager.alloc();
+                    })) != null) {
+                    numAllocs++;
+                    log.debug("alloc() : " + ref);
                 }
+                allocs.add(numAllocs);
             }));
         }
         for (Thread t : workers) {
@@ -123,20 +104,14 @@ public abstract class ItemManagerTestBase extends TestCase {
         Random random = new Random();
         for (int i = 0; i < 1000; i++) {
             final ItemReference ref = refs.get(random.nextInt(refs.size()));
-            txMgr.execute(new Transaction<Void>() {
-                @Override
-                public Void perform(TransactionContext txContext) {
-                    ItemManager itemManager = getItemManager(txContext);
-                    itemManager.free(ref);
-                    return null;
-                }
+            txMgr.execute(txContext -> {
+                ItemManager itemManager = getItemManager(txContext);
+                itemManager.free(ref);
+                return null;
             });
-            ItemReference allocRef = txMgr.execute(new Transaction<ItemReference>() {
-                @Override
-                public ItemReference perform(TransactionContext txContext) {
-                    ItemManager itemManager = getItemManager(txContext);
-                    return itemManager.alloc();
-                }
+            ItemReference allocRef = txMgr.execute(txContext -> {
+                ItemManager itemManager = getItemManager(txContext);
+                return itemManager.alloc();
             });
             log.debug("free/alloc: " + ref);
             assertEquals(ref, allocRef);

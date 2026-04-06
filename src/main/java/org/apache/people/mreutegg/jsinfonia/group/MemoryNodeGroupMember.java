@@ -78,14 +78,9 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
 
     public MemoryNodeGroupMember(final MemoryNode memoryNode)
             throws Exception {
-        this.executor =  Executors.newCachedThreadPool(new ThreadFactory() {
-            private final AtomicInteger numThreads = new AtomicInteger();
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, MemoryNodeGroupMember.class.getSimpleName() +
-                        "-" + memoryNode.getInfo().getId() + "-Thread-" + numThreads.getAndIncrement());
-            }
-        });
+        final AtomicInteger numThreads = new AtomicInteger();
+        this.executor =  Executors.newCachedThreadPool(r -> new Thread(r, MemoryNodeGroupMember.class.getSimpleName() +
+                "-" + memoryNode.getInfo().getId() + "-Thread-" + numThreads.getAndIncrement()));
         this.memoryNode = memoryNode;
         this.channel = new JChannel("org/apache/people/mreutegg/jsinfonia/group/jgroups.xml");
         this.channel.setName(CHANNEL_NAME);
@@ -188,14 +183,11 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
     }
 
     private void sendMessage(final MemoryNodeMessage msg) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    channel.send(msg);
-                } catch (Exception e) {
-                    log.error("Unable to send message", e);
-                }
+        executor.execute(() -> {
+            try {
+                channel.send(msg);
+            } catch (Exception e) {
+                log.error("Unable to send message", e);
             }
         });
     }

@@ -36,19 +36,10 @@ import org.apache.people.mreutegg.jsinfonia.MemoryNodeDirectory;
 import org.apache.people.mreutegg.jsinfonia.SimpleApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeDirectory;
 import org.apache.people.mreutegg.jsinfonia.data.DataItemCache;
-import org.apache.people.mreutegg.jsinfonia.data.Transaction;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
 import org.apache.people.mreutegg.jsinfonia.fs.FileMemoryNode;
 import org.apache.people.mreutegg.jsinfonia.mem.InMemoryMemoryNode;
-import org.apache.people.mreutegg.jsinfonia.util.BucketReader;
-import org.apache.people.mreutegg.jsinfonia.util.BucketWriter;
-import org.apache.people.mreutegg.jsinfonia.util.CompositeItemManager;
-import org.apache.people.mreutegg.jsinfonia.util.ItemManager;
-import org.apache.people.mreutegg.jsinfonia.util.ItemManagerFactory;
-import org.apache.people.mreutegg.jsinfonia.util.ItemManagerImpl;
-import org.apache.people.mreutegg.jsinfonia.util.LinearHashMap;
-import org.apache.people.mreutegg.jsinfonia.util.SinfoniaHashMap;
 
 import junit.framework.TestCase;
 
@@ -149,37 +140,34 @@ public class LinearHashMapTest extends TestCase {
         final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
         List<Thread> workers = new ArrayList<>();
         for (int i = 0; i < numThreads; i++) {
-            workers.add(new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        TransactionManager txManager = new TransactionManager(
-                                appNode, new DataItemCache(128));
-                        SinfoniaHashMap<Integer, Integer> map = createSinfoniaHashMap(
-                                txManager, hashMapHeaderRef);
-                        Random random = new Random(Thread.currentThread().hashCode());
-                        Map<Integer, Integer> tmp = new HashMap<>();
-                        for (int i = 0; i < numPuts / numThreads; i++) {
-                            if (i % 1000 == 0) {
-                                // put in batches if putAll == true
-                                System.out.println(Thread.currentThread().getName() + ": put " + i + " entries");
-                                if (!tmp.isEmpty()) {
-                                    map.putAll(tmp);
-                                    tmp.clear();
-                                }
-                            }
-                            if (putAll) {
-                                tmp.put(random.nextInt(), i);
-                            } else {
-                                map.put(random.nextInt(), i);
+            workers.add(new Thread(() -> {
+                try {
+                    TransactionManager txManager = new TransactionManager(
+                            appNode, new DataItemCache(128));
+                    SinfoniaHashMap<Integer, Integer> map = createSinfoniaHashMap(
+                            txManager, hashMapHeaderRef);
+                    Random random = new Random(Thread.currentThread().hashCode());
+                    Map<Integer, Integer> tmp = new HashMap<>();
+                    for (int j = 0; j < numPuts / numThreads; j++) {
+                        if (j % 1000 == 0) {
+                            // put in batches if putAll == true
+                            System.out.println(Thread.currentThread().getName() + ": put " + j + " entries");
+                            if (!tmp.isEmpty()) {
+                                map.putAll(tmp);
+                                tmp.clear();
                             }
                         }
-                        if (!tmp.isEmpty()) {
-                            map.putAll(tmp);
+                        if (putAll) {
+                            tmp.put(random.nextInt(), j);
+                        } else {
+                            map.put(random.nextInt(), j);
                         }
-                    } catch (Exception e) {
-                        exceptions.add(e);
                     }
+                    if (!tmp.isEmpty()) {
+                        map.putAll(tmp);
+                    }
+                } catch (Exception e) {
+                    exceptions.add(e);
                 }
             }));
         }
@@ -214,26 +202,20 @@ public class LinearHashMapTest extends TestCase {
         ApplicationNode appNode = getApplicationNode();
         TransactionManager txManager = new TransactionManager(appNode, new DataItemCache(128));
 
-        final List<ItemReference> itemMgrHeaderRefs = txManager.execute(new Transaction<List<ItemReference>>() {
-            @Override
-            public List<ItemReference> perform(TransactionContext txContext) {
-                List<ItemReference> headerRefs = new ArrayList<>();
-                for (int i = 0; i < numMemoryNodes; i++) {
-                    headerRefs.add(ItemManagerImpl.initialize(txContext, i, addressSpace));
-                }
-                return headerRefs;
+        final List<ItemReference> itemMgrHeaderRefs = txManager.execute(txContext -> {
+            List<ItemReference> headerRefs = new ArrayList<>();
+            for (int i = 0; i < numMemoryNodes; i++) {
+                headerRefs.add(ItemManagerImpl.initialize(txContext, i, addressSpace));
             }
+            return headerRefs;
         });
 
-        hashMapHeaderRef = txManager.execute(new Transaction<ItemReference>() {
-            @Override
-            public ItemReference perform(TransactionContext txContext) {
-                Map<Integer, ItemManager> itemMgrs = new HashMap<>();
-                for (ItemReference r : itemMgrHeaderRefs) {
-                    itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
-                }
-                return new CompositeItemManager(itemMgrs).alloc();
+        hashMapHeaderRef = txManager.execute(txContext -> {
+            Map<Integer, ItemManager> itemMgrs = new HashMap<>();
+            for (ItemReference r : itemMgrHeaderRefs) {
+                itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
             }
+            return new CompositeItemManager(itemMgrs).alloc();
         });
 
         return createSinfoniaHashMap(txManager, hashMapHeaderRef);
@@ -242,47 +224,36 @@ public class LinearHashMapTest extends TestCase {
     private SinfoniaHashMap<Integer, Integer> createSinfoniaHashMap(
             TransactionManager txManager, ItemReference headerRef) {
         return new SinfoniaHashMap<>(txManager,
-                new ItemManagerFactory() {
-                    @Override
-                    public ItemManager createItemManager(TransactionContext txContext) {
-                        Map<Integer, ItemManager> itemMgrs = new HashMap<>();
-                        for (int i = 0; i < numMemoryNodes; i++) {
-                            ItemReference headerRef = new ItemReference(i, 0);
-                            itemMgrs.put(i, new ItemManagerImpl(txContext, headerRef));
-                        }
-                        return new CompositeItemManager(itemMgrs);
+                txContext -> {
+                    Map<Integer, ItemManager> itemMgrs = new HashMap<>();
+                    for (int i = 0; i < numMemoryNodes; i++) {
+                        ItemReference hRef = new ItemReference(i, 0);
+                        itemMgrs.put(i, new ItemManagerImpl(txContext, hRef));
                     }
+                    return new CompositeItemManager(itemMgrs);
                 },
                 headerRef,
-                new BucketReader<Entry<Integer, Integer>>() {
-                    @Override
-                    public Iterable<Entry<Integer, Integer>> read(
-                            ByteBuffer data) {
-                        Map<Integer, Integer> entries = new HashMap<>();
-                        char num = data.getChar();
-                        for (int i = 0; i < num; i++) {
-                            entries.put(data.getInt(), data.getInt());
-                        }
-                        return entries.entrySet();
+                data -> {
+                    Map<Integer, Integer> entries = new HashMap<>();
+                    char num = data.getChar();
+                    for (int i = 0; i < num; i++) {
+                        entries.put(data.getInt(), data.getInt());
                     }
+                    return entries.entrySet();
                 },
-                new BucketWriter<Entry<Integer, Integer>>() {
-                    @Override
-                    public int write(Iterable<Entry<Integer, Integer>> entries,
-                                     ByteBuffer data) {
-                        char num = 0;
-                        data.putChar(num);
-                        try {
-                            for (Entry<Integer, Integer> e : entries) {
-                                data.putInt(e.getKey()).putInt(e.getValue());
-                                num++;
-                            }
-                        } catch (BufferOverflowException e) {
-                            // stop writing more entries
+                (entries, data) -> {
+                    char num = 0;
+                    data.putChar(num);
+                    try {
+                        for (Entry<Integer, Integer> e : entries) {
+                            data.putInt(e.getKey()).putInt(e.getValue());
+                            num++;
                         }
-                        data.putChar(0, num);
-                        return num;
+                    } catch (BufferOverflowException e) {
+                        // stop writing more entries
                     }
+                    data.putChar(0, num);
+                    return num;
                 });
     }
 

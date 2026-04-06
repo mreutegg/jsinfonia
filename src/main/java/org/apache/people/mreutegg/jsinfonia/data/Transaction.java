@@ -24,7 +24,8 @@ package org.apache.people.mreutegg.jsinfonia.data;
  * every attempt to perform the transaction using the provided
  * {@link TransactionContext} to read and write data.
  */
-public abstract class Transaction<T> {
+@FunctionalInterface
+public interface Transaction<T> {
 
     /**
      * This method is called to actually perform the operations of
@@ -38,6 +39,6 @@ public abstract class Transaction<T> {
      * @param txContext the transaction context.
      * @return the result object.
      */
-    public abstract T perform(TransactionContext txContext);
+    T perform(TransactionContext txContext);
 
 }

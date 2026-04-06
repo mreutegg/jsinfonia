@@ -46,13 +46,7 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return txManager.execute(new Transaction<Set<Map.Entry<K, V>>>() {
-            @Override
-            public Set<java.util.Map.Entry<K, V>> perform(
-                    TransactionContext txContext) {
-                return createMap(txContext).entrySet();
-            }
-        });
+        return txManager.execute(txContext -> createMap(txContext).entrySet());
     }
 
     @Override
@@ -63,32 +57,17 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
         if (value == null) {
             throw new NullPointerException("value must not be null");
         }
-        return txManager.execute(new Transaction<V>() {
-            @Override
-            public V perform(TransactionContext txContext) {
-                return createMap(txContext).put(key, value);
-            }
-        });
+        return txManager.execute(txContext -> createMap(txContext).put(key, value));
     }
 
     @Override
     public V remove(final Object key) {
-        return txManager.execute(new Transaction<V>() {
-            @Override
-            public V perform(TransactionContext txContext) {
-                return createMap(txContext).remove(key);
-            }
-        });
+        return txManager.execute(txContext -> createMap(txContext).remove(key));
     }
 
     @Override
     public V get(final Object key) {
-        return txManager.execute(new Transaction<V>() {
-            @Override
-            public V perform(TransactionContext txContext) {
-                return createMap(txContext).get(key);
-            }
-        });
+        return txManager.execute(txContext -> createMap(txContext).get(key));
     }
 
     @Override
@@ -100,12 +79,9 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
 
     @Override
     public void putAll(final Map<? extends K, ? extends V> m) {
-        txManager.execute(new Transaction<Void>() {
-            @Override
-            public Void perform(TransactionContext txContext) {
-                createMap(txContext).putAll(m);
-                return null;
-            }
+        txManager.execute(txContext -> {
+            createMap(txContext).putAll(m);
+            return null;
         });
     }
 

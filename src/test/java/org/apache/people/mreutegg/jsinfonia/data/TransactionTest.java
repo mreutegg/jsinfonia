@@ -81,30 +81,18 @@ public class TransactionTest extends AbstractTransactionTest {
             int numIncrements = 0;
             boolean incremented;
             do {
-                incremented = context.execute(new Transaction<Boolean>() {
-                    @Override
-                    public Boolean perform(TransactionContext txContext) {
-                        final int value = txContext.read(new ItemReference(0, 0), new DataOperation<Integer>() {
-                            @Override
-                            public Integer perform(ByteBuffer data) {
-                                return data.getInt(0);
-                            }
+                incremented = context.execute(txContext -> {
+                    final int value = txContext.read(new ItemReference(0, 0), data -> data.getInt(0));
+                    log.debug("read " + value);
+                    if (value < COUNT_TO) {
+                        txContext.write(new ItemReference(0, 0), data -> {
+                            data.putInt(0, value + 1);
+                            return null;
                         });
-                        log.debug("read " + value);
-                        if (value < COUNT_TO) {
-                            txContext.write(new ItemReference(0, 0), new DataOperation<Void>() {
-                                @Override
-                                public Void perform(ByteBuffer data) {
-                                    data.putInt(0, value + 1);
-                                    return null;
-                                }
-
-                            });
-                            log.debug("write " + (value + 1));
-                            return true;
-                        } else {
-                            return false;
-                        }
+                        log.debug("write " + (value + 1));
+                        return true;
+                    } else {
+                        return false;
                     }
                 });
                 if (incremented) {

@@ -57,13 +57,7 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
     @Override
     public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
         try {
-            List<TMemoryNodeInfo> infos = executeWithClient(
-                    new ClientCallable<List<TMemoryNodeInfo>, Client, TException>() {
-                @Override
-                public List<TMemoryNodeInfo> call(Client client) throws TException {
-                    return client.getMemoryNodeInfos();
-                }
-            });
+            List<TMemoryNodeInfo> infos = executeWithClient(client -> client.getMemoryNodeInfos());
             Map<Integer, MemoryNodeInfo> map = new HashMap<>();
             for (TMemoryNodeInfo info : infos) {
                 map.put(info.getId(), new SimpleMemoryNodeInfo(
@@ -79,13 +73,7 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
     @Override
     public Response executeTransaction(final MiniTransaction tx) {
         try {
-            TResponse response = executeWithClient(
-                    new ClientCallable<TResponse, Client, TException>() {
-                @Override
-                public TResponse call(Client client) throws TException {
-                    return client.executeTransaction(Utils.convert(tx));
-                }
-            });
+            TResponse response = executeWithClient(client -> client.executeTransaction(Utils.convert(tx)));
             if (response.isSetReadItems()) {
                 Map<ItemReference, Item> readItems = new HashMap<>();
                 for (Item item : tx.getReadItems()) {

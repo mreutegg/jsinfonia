@@ -52,42 +52,36 @@ public class InternalNode extends BTreeNode {
 
     @Override
     public void save() {
-        txContext.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.put(TYPE_INTERNAL);
-                data.putInt(keys.size());
-                for (String key : keys) {
-                    writeString(data, key);
-                }
-                for (ItemReference child : children) {
-                    writeItemReference(data, child);
-                }
-                return null;
+        txContext.write(ref, data -> {
+            data.put(TYPE_INTERNAL);
+            data.putInt(keys.size());
+            for (String key : keys) {
+                writeString(data, key);
             }
+            for (ItemReference child : children) {
+                writeItemReference(data, child);
+            }
+            return null;
         });
     }
 
     @Override
     public void load() {
-        txContext.read(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                byte type = data.get();
-                if (type != TYPE_INTERNAL) {
-                    throw new IllegalStateException("Not an internal node");
-                }
-                int count = data.getInt();
-                keys.clear();
-                for (int i = 0; i < count; i++) {
-                    keys.add(readString(data));
-                }
-                children.clear();
-                for (int i = 0; i <= count; i++) {
-                    children.add(readItemReference(data));
-                }
-                return null;
+        txContext.read(ref, data -> {
+            byte type = data.get();
+            if (type != TYPE_INTERNAL) {
+                throw new IllegalStateException("Not an internal node");
             }
+            int count = data.getInt();
+            keys.clear();
+            for (int i = 0; i < count; i++) {
+                keys.add(readString(data));
+            }
+            children.clear();
+            for (int i = 0; i <= count; i++) {
+                children.add(readItemReference(data));
+            }
+            return null;
         });
     }
 }

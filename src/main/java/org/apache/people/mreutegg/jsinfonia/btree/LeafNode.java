@@ -50,42 +50,36 @@ public class LeafNode extends BTreeNode {
 
     @Override
     public void save() {
-        txContext.write(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                data.put(TYPE_LEAF);
-                data.putInt(keys.size());
-                for (String key : keys) {
-                    writeString(data, key);
-                }
-                for (byte[] value : values) {
-                    writeBytes(data, value);
-                }
-                return null;
+        txContext.write(ref, data -> {
+            data.put(TYPE_LEAF);
+            data.putInt(keys.size());
+            for (String key : keys) {
+                writeString(data, key);
             }
+            for (byte[] value : values) {
+                writeBytes(data, value);
+            }
+            return null;
         });
     }
 
     @Override
     public void load() {
-        txContext.read(ref, new DataOperation<Void>() {
-            @Override
-            public Void perform(ByteBuffer data) {
-                byte type = data.get();
-                if (type != TYPE_LEAF) {
-                    throw new IllegalStateException("Not a leaf node");
-                }
-                int count = data.getInt();
-                keys.clear();
-                for (int i = 0; i < count; i++) {
-                    keys.add(readString(data));
-                }
-                values.clear();
-                for (int i = 0; i < count; i++) {
-                    values.add(readBytes(data));
-                }
-                return null;
+        txContext.read(ref, data -> {
+            byte type = data.get();
+            if (type != TYPE_LEAF) {
+                throw new IllegalStateException("Not a leaf node");
             }
+            int count = data.getInt();
+            keys.clear();
+            for (int i = 0; i < count; i++) {
+                keys.add(readString(data));
+            }
+            values.clear();
+            for (int i = 0; i < count; i++) {
+                values.add(readBytes(data));
+            }
+            return null;
         });
     }
 }
