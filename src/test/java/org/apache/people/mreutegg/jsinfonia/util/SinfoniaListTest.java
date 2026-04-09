@@ -1,12 +1,12 @@
 /*
  * Copyright 2013 Marcel Reutegger
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,128 +15,127 @@
  */
 package org.apache.people.mreutegg.jsinfonia.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
 import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.MemoryNode;
 import org.apache.people.mreutegg.jsinfonia.SimpleApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeDirectory;
 import org.apache.people.mreutegg.jsinfonia.data.DataItemCache;
-import org.apache.people.mreutegg.jsinfonia.data.Transaction;
-import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
-import org.apache.people.mreutegg.jsinfonia.fs.FileMemoryNode;
 import org.apache.people.mreutegg.jsinfonia.mem.InMemoryMemoryNode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SinfoniaListTest {
+class SinfoniaListTest {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private static final int NUM_MEMORY_NODES = 4;
-    private static final int ADDRESS_SPACE = 1024;
-    private static final int ITEM_SIZE = 1024;
-    private ApplicationNode appNode;
-    private TransactionManager txMgr;
-    private ItemManagerFactory itemMgrFactory;
+  private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+  private static final int NUM_MEMORY_NODES = 4;
+  private static final int ADDRESS_SPACE = 1024;
+  private static final int ITEM_SIZE = 1024;
+  private ApplicationNode appNode;
+  private TransactionManager txMgr;
+  private ItemManagerFactory itemMgrFactory;
 
-
-    @Before
-    public void init() {
-        SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
-        for (int i = 0; i < NUM_MEMORY_NODES; i++) {
-            directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
-        }
-        appNode = new SimpleApplicationNode(directory, EXECUTOR);
-        txMgr = createTransactionManager();
-        // initialize item manager & factory
-        final List<ItemReference> itemMgrHeaderRefs = txMgr.execute(txContext -> {
-            List<ItemReference> headerRefs = new ArrayList<>();
-            for (int i = 0; i < NUM_MEMORY_NODES; i++) {
+  @BeforeEach
+  void init() {
+    SimpleMemoryNodeDirectory<MemoryNode> directory = new SimpleMemoryNodeDirectory<>();
+    for (int i = 0; i < NUM_MEMORY_NODES; i++) {
+      directory.addMemoryNode(new InMemoryMemoryNode(i, ADDRESS_SPACE, ITEM_SIZE));
+    }
+    appNode = new SimpleApplicationNode(directory, EXECUTOR);
+    txMgr = createTransactionManager();
+    // initialize item manager & factory
+    final List<ItemReference> itemMgrHeaderRefs =
+        txMgr.execute(
+            txContext -> {
+              List<ItemReference> headerRefs = new ArrayList<>();
+              for (int i = 0; i < NUM_MEMORY_NODES; i++) {
                 headerRefs.add(ItemManagerImpl.initialize(txContext, i, ADDRESS_SPACE));
-            }
-            return headerRefs;
-        });
-        itemMgrFactory = txContext -> {
-            Map<Integer, ItemManager> itemMgrs = new HashMap<>();
-            for (ItemReference r : itemMgrHeaderRefs) {
-                itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
-            }
-            return new CompositeItemManager(itemMgrs);
+              }
+              return headerRefs;
+            });
+    itemMgrFactory =
+        txContext -> {
+          Map<Integer, ItemManager> itemMgrs = new HashMap<>();
+          for (ItemReference r : itemMgrHeaderRefs) {
+            itemMgrs.put(r.getMemoryNodeId(), new ItemManagerImpl(txContext, r));
+          }
+          return new CompositeItemManager(itemMgrs);
         };
-    }
+  }
 
-    @Test
-    public void size() {
-        List<Integer> list = createList();
-        assertEquals(0, list.size());
-    }
+  @Test
+  void size() {
+    List<Integer> list = createList();
+    assertEquals(0, list.size());
+  }
 
-    @Test
-    public void add() {
-        List<Integer> list = createList();
-        int numValues = 1000;
-        for (int i = 0; i < numValues; i++) {
-            list.add(i);
-        }
-        assertEquals(numValues, list.size());
+  @Test
+  void add() {
+    List<Integer> list = createList();
+    int numValues = 1000;
+    for (int i = 0; i < numValues; i++) {
+      list.add(i);
     }
+    assertEquals(numValues, list.size());
+  }
 
-    @Test
-    public void iterator() {
-        List<Integer> list = createList();
-        int numValues = 1000;
-        for (int i = 0; i < numValues; i++) {
-            list.add(i);
-        }
-        int i = 0;
-        for (Integer value : list) {
-            assertEquals(i++, value.intValue());
-        }
+  @Test
+  void iterator() {
+    List<Integer> list = createList();
+    int numValues = 1000;
+    for (int i = 0; i < numValues; i++) {
+      list.add(i);
     }
+    int i = 0;
+    for (Integer value : list) {
+      assertEquals(i++, value.intValue());
+    }
+  }
 
-    private List<Integer> createList() {
-        return txMgr.execute(txContext -> {
-            ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
-            return SinfoniaList.newList(ref, txContext, itemMgrFactory,
-                    data -> {
-                        char num = data.getChar();
-                        List<Integer> items = new ArrayList<>();
-                        while (num-- > 0) {
-                            items.add(data.getInt());
-                        }
-                        return items;
-                    },
-                    (entries, data) -> {
-                        char num = 0;
-                        data.putChar(num);
-                        try {
-                            for (Integer j : entries) {
-                                data.putInt(j);
-                                num++;
-                            }
-                        } catch (BufferOverflowException e) {
-                            // stop writing more entries
-                        }
-                        data.putChar(0, num);
-                        return num;
-                    });
+  private List<Integer> createList() {
+    return txMgr.execute(
+        txContext -> {
+          ItemReference ref = itemMgrFactory.createItemManager(txContext).alloc();
+          return SinfoniaList.newList(
+              ref,
+              txContext,
+              itemMgrFactory,
+              data -> {
+                char num = data.getChar();
+                List<Integer> items = new ArrayList<>();
+                while (num-- > 0) {
+                  items.add(data.getInt());
+                }
+                return items;
+              },
+              (entries, data) -> {
+                char num = 0;
+                data.putChar(num);
+                try {
+                  for (Integer j : entries) {
+                    data.putInt(j);
+                    num++;
+                  }
+                } catch (BufferOverflowException e) {
+                  // stop writing more entries
+                }
+                data.putChar(0, num);
+                return num;
+              });
         });
-    }
+  }
 
-    private TransactionManager createTransactionManager() {
-        return new TransactionManager(appNode, new DataItemCache(128));
-    }
+  private TransactionManager createTransactionManager() {
+    return new TransactionManager(appNode, new DataItemCache(128));
+  }
 }

@@ -1,12 +1,12 @@
 /*
  * Copyright 2013 Marcel Reutegger
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,22 +17,22 @@ package org.apache.people.mreutegg.jsinfonia.data;
 
 public class FailTransactionException extends RuntimeException {
 
-    private static final long serialVersionUID = 3912929452131625265L;
+  private static final long serialVersionUID = 3912929452131625265L;
 
-    public FailTransactionException(String message) {
-        super(message);
-    }
+  public FailTransactionException(String message) {
+    super(message);
+  }
 
-    public FailTransactionException(RuntimeException cause) {
-        super(cause);
-    }
+  public FailTransactionException(RuntimeException cause) {
+    super(cause);
+  }
 
-    public FailTransactionException(String message, RuntimeException cause) {
-        super(message, cause);
-    }
+  public FailTransactionException(String message, RuntimeException cause) {
+    super(message, cause);
+  }
 
-    @Override
-    public synchronized RuntimeException getCause() {
-        return (RuntimeException) super.getCause();
-    }
+  @Override
+  public synchronized RuntimeException getCause() {
+    return (RuntimeException) super.getCause();
+  }
 }

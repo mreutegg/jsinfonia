@@ -1,12 +1,12 @@
 /*
  * Copyright 2013 Marcel Reutegger
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,70 +23,69 @@ import java.nio.ByteBuffer;
 
 public class ItemReference {
 
-    private final int memoryNodeId;
+  private final int memoryNodeId;
 
-    private final int address;
+  private final int address;
 
-    public ItemReference(int memoryNodeId, int address) {
-        this.memoryNodeId = memoryNodeId;
-        this.address = address;
+  public ItemReference(int memoryNodeId, int address) {
+    this.memoryNodeId = memoryNodeId;
+    this.address = address;
+  }
+
+  public static ItemReference fromBuffer(ByteBuffer buffer) {
+    return new ItemReference(buffer.getInt(), buffer.getInt());
+  }
+
+  public void toByteBuffer(ByteBuffer buffer) {
+    if (buffer.remaining() < 8) {
+      throw new BufferOverflowException();
     }
+    buffer.putInt(memoryNodeId);
+    buffer.putInt(address);
+  }
 
-    public static ItemReference fromBuffer(ByteBuffer buffer) {
-        return new ItemReference(buffer.getInt(), buffer.getInt());
-    }
+  public int getMemoryNodeId() {
+    return memoryNodeId;
+  }
 
-    public void toByteBuffer(ByteBuffer buffer) {
-        if (buffer.remaining() < 8) {
-            throw new BufferOverflowException();
-        }
-        buffer.putInt(memoryNodeId);
-        buffer.putInt(address);
-    }
+  public int getAddress() {
+    return address;
+  }
 
-    public int getMemoryNodeId() {
-        return memoryNodeId;
-    }
+  public static ItemReference readFrom(DataInputStream in) throws IOException {
+    return new ItemReference(in.readInt(), in.readInt());
+  }
 
-    public int getAddress() {
-        return address;
-    }
+  public void writeTo(DataOutputStream out) throws IOException {
+    out.writeInt(memoryNodeId);
+    out.writeInt(address);
+  }
 
-    public static ItemReference readFrom(DataInputStream in)
-            throws IOException {
-        return new ItemReference(in.readInt(), in.readInt());
-    }
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("ItemReference(");
+    sb.append(memoryNodeId);
+    sb.append(", ");
+    sb.append(address);
+    sb.append(")");
+    return sb.toString();
+  }
 
-    public void writeTo(DataOutputStream out) throws IOException {
-        out.writeInt(memoryNodeId);
-        out.writeInt(address);
-    }
+  @Override
+  public int hashCode() {
+    int hash = 17;
+    hash = 37 * hash + memoryNodeId;
+    hash = 37 * hash + address;
+    return hash;
+  }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("ItemReference(");
-        sb.append(memoryNodeId);
-        sb.append(", ");
-        sb.append(address);
-        sb.append(")");
-        return sb.toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof ItemReference) {
+      ItemReference other = (ItemReference) obj;
+      return memoryNodeId == other.memoryNodeId && address == other.address;
+    } else {
+      return false;
     }
-
-    @Override
-    public int hashCode() {
-        int hash = 17;
-        hash = 37 * hash + memoryNodeId;
-        hash = 37 * hash + address;
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ItemReference) {
-            ItemReference other = (ItemReference) obj;
-            return memoryNodeId == other.memoryNodeId && address == other.address;
-        } else {
-            return false;
-        }
-    }
+  }
 }

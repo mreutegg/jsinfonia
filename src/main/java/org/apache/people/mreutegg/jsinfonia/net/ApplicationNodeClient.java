@@ -1,12 +1,12 @@
 /*
  * Copyright 2013 Marcel Reutegger
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,11 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.apache.people.mreutegg.jsinfonia.thrift.ApplicationNodeService.Client;
-import org.apache.people.mreutegg.jsinfonia.thrift.TItem;
-import org.apache.people.mreutegg.jsinfonia.thrift.TMemoryNodeInfo;
-import org.apache.people.mreutegg.jsinfonia.thrift.TResponse;
 import org.apache.people.mreutegg.jsinfonia.ApplicationNode;
 import org.apache.people.mreutegg.jsinfonia.Item;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
@@ -31,65 +26,71 @@ import org.apache.people.mreutegg.jsinfonia.MemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.MiniTransaction;
 import org.apache.people.mreutegg.jsinfonia.Response;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeInfo;
+import org.apache.people.mreutegg.jsinfonia.thrift.ApplicationNodeService.Client;
+import org.apache.people.mreutegg.jsinfonia.thrift.TItem;
+import org.apache.people.mreutegg.jsinfonia.thrift.TMemoryNodeInfo;
+import org.apache.people.mreutegg.jsinfonia.thrift.TResponse;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TTransport;
 
 public class ApplicationNodeClient extends ThriftClient<Client> implements ApplicationNode {
 
-    public ApplicationNodeClient(String host, int port, int numConnections, boolean framed)
-            throws TException {
-        super(host, port, numConnections, framed);
+  public ApplicationNodeClient(String host, int port, int numConnections, boolean framed)
+      throws TException {
+    super(host, port, numConnections, framed);
+  }
+
+  @Override
+  protected Client createClient(TTransport transport) {
+    return new Client(new TBinaryProtocol(transport));
+  }
+
+  // --------------------------------< ApplicationNode >----------------------
+
+  @Override
+  public MiniTransaction createMiniTransaction() {
+    return new MiniTransaction(UUID.randomUUID().toString());
+  }
+
+  @Override
+  public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
+    try {
+      List<TMemoryNodeInfo> infos = executeWithClient(client -> client.getMemoryNodeInfos());
+      Map<Integer, MemoryNodeInfo> map = new HashMap<>();
+      for (TMemoryNodeInfo info : infos) {
+        map.put(
+            info.getId(),
+            new SimpleMemoryNodeInfo(info.getId(), info.getAddressSpace(), info.getItemSize()));
+      }
+      return map;
+
+    } catch (TException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    protected Client createClient(TTransport transport) {
-        return new Client(new TBinaryProtocol(transport));
-    }
-
-    //--------------------------------< ApplicationNode >----------------------
-
-    @Override
-    public MiniTransaction createMiniTransaction() {
-        return new MiniTransaction(UUID.randomUUID().toString());
-    }
-
-    @Override
-    public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
-        try {
-            List<TMemoryNodeInfo> infos = executeWithClient(client -> client.getMemoryNodeInfos());
-            Map<Integer, MemoryNodeInfo> map = new HashMap<>();
-            for (TMemoryNodeInfo info : infos) {
-                map.put(info.getId(), new SimpleMemoryNodeInfo(
-                        info.getId(), info.getAddressSpace(), info.getItemSize()));
-            }
-            return map;
-
-        } catch (TException e) {
-            throw new RuntimeException(e);
+  @Override
+  public Response executeTransaction(final MiniTransaction tx) {
+    try {
+      TResponse response =
+          executeWithClient(client -> client.executeTransaction(Utils.convert(tx)));
+      if (response.isSetReadItems()) {
+        Map<ItemReference, Item> readItems = new HashMap<>();
+        for (Item item : tx.getReadItems()) {
+          readItems.put(item.getReference(), item);
         }
-    }
-
-    @Override
-    public Response executeTransaction(final MiniTransaction tx) {
-        try {
-            TResponse response = executeWithClient(client -> client.executeTransaction(Utils.convert(tx)));
-            if (response.isSetReadItems()) {
-                Map<ItemReference, Item> readItems = new HashMap<>();
-                for (Item item : tx.getReadItems()) {
-                    readItems.put(item.getReference(), item);
-                }
-                for (TItem item : response.getReadItems()) {
-                    ItemReference r = Utils.convert(item.getReference());
-                    Item readItem = readItems.get(r);
-                    if (readItem != null) {
-                        readItem.getData().put(item.bufferForData());
-                    }
-                }
-            }
-            return Utils.convert(response);
-        } catch (TException e) {
-            throw new RuntimeException(e);
+        for (TItem item : response.getReadItems()) {
+          ItemReference r = Utils.convert(item.getReference());
+          Item readItem = readItems.get(r);
+          if (readItem != null) {
+            readItem.getData().put(item.bufferForData());
+          }
         }
+      }
+      return Utils.convert(response);
+    } catch (TException e) {
+      throw new RuntimeException(e);
     }
+  }
 }
