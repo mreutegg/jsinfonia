@@ -57,7 +57,7 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
   private MemoryNodeInfo info;
 
   private final Map<String, SettableFuture<ResultMessage>> pendingResults =
-      Collections.synchronizedMap(new HashMap<String, SettableFuture<ResultMessage>>());
+      Collections.synchronizedMap(new HashMap<>());
 
   public MemoryNodeGroupClient(final int memoryNodeId) throws Exception {
     final AtomicInteger numThreads = new AtomicInteger();
@@ -144,13 +144,13 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
   // --------------------< MemoryNodeMessageVisitor >-------------------------
 
   @Override
-  public void visit(CommitMessage msg) throws IOException {}
+  public void visit(CommitMessage msg) {}
 
   @Override
-  public void visit(ExecuteAndPrepareMessage msg) throws IOException {}
+  public void visit(ExecuteAndPrepareMessage msg) {}
 
   @Override
-  public void visit(ResultMessage msg) throws IOException {
+  public void visit(ResultMessage msg) {
     SettableFuture<ResultMessage> future = pendingResults.get(msg.getMiniTransaction().getTxId());
     if (future != null) {
       future.set(msg);

@@ -17,7 +17,6 @@ package org.apache.people.mreutegg.jsinfonia.data;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,14 +36,14 @@ public class TransactionTest extends AbstractTransactionTest {
   private static final int COUNT_TO = 1000;
 
   @Override
-  protected MemoryNodeDirectory<? extends MemoryNode> createDirectory() throws IOException {
+  protected MemoryNodeDirectory<? extends MemoryNode> createDirectory() {
     return createDirectory(1, 1024, 1024, 128);
   }
 
   @Test
   public void transaction() throws Exception {
 
-    List<Integer> results = Collections.synchronizedList(new ArrayList<Integer>());
+    List<Integer> results = Collections.synchronizedList(new ArrayList<>());
     List<Thread> workers = new ArrayList<>();
     for (int i = 0; i < NUM_WORKERS; i++) {
       workers.add(new Thread(new Worker(createTransactionContext(), results)));

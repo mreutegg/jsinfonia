@@ -48,9 +48,7 @@ public abstract class ThriftClient<C> implements Closeable {
         transport = new TFramedTransport(socket);
       }
       transport.open();
-      log.debug(
-          "opened socket to {}:{} on {}",
-          new Object[] {host, port, socket.getSocket().getLocalPort()});
+      log.debug("opened socket to {}:{} on {}", host, port, socket.getSocket().getLocalPort());
       clients.add(createClient(transport));
     }
   }

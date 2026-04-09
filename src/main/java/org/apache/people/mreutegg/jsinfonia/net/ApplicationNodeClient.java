@@ -56,7 +56,7 @@ public class ApplicationNodeClient extends ThriftClient<Client> implements Appli
   @Override
   public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos() {
     try {
-      List<TMemoryNodeInfo> infos = executeWithClient(client -> client.getMemoryNodeInfos());
+      List<TMemoryNodeInfo> infos = executeWithClient(Client::getMemoryNodeInfos);
       Map<Integer, MemoryNodeInfo> map = new HashMap<>();
       for (TMemoryNodeInfo info : infos) {
         map.put(

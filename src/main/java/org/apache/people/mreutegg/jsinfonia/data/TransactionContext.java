@@ -26,7 +26,7 @@ public interface TransactionContext {
    * @param op the read operation to perform.
    * @return the result of the read operation.
    */
-  public <T> T read(ItemReference reference, DataOperation<T> op);
+  <T> T read(ItemReference reference, DataOperation<T> op);
 
   /**
    * Perform a write operation within this transaction context.
@@ -35,5 +35,5 @@ public interface TransactionContext {
    * @param op the write operation to perform.
    * @return the result of the write operation.
    */
-  public <T> T write(ItemReference reference, DataOperation<T> op);
+  <T> T write(ItemReference reference, DataOperation<T> op);
 }

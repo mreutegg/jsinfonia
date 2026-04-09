@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class FileRedoLog implements RedoLog, Closeable {
 
   // transactions in log. maps transactionID to offset in file
   private final Map<String, TxInfo> loggedTransactions =
-      Collections.synchronizedMap(new HashMap<String, TxInfo>());
+      Collections.synchronizedMap(new HashMap<>());
 
   public FileRedoLog(FileMemoryNode memoryNode, File file) throws IOException {
     if (!file.exists() && !file.createNewFile()) {
@@ -165,14 +164,8 @@ public class FileRedoLog implements RedoLog, Closeable {
       txInfo.position = position;
       try {
         while (!buffers.isEmpty()) {
-          file.getChannel().write(buffers.toArray(new ByteBuffer[buffers.size()]));
-          Iterator<ByteBuffer> it = buffers.iterator();
-          while (it.hasNext()) {
-            ByteBuffer bb = it.next();
-            if (!bb.hasRemaining()) {
-              it.remove();
-            }
-          }
+          file.getChannel().write(buffers.toArray(new ByteBuffer[0]));
+          buffers.removeIf(bb -> !bb.hasRemaining());
         }
       } catch (IOException e) {
         try {
@@ -272,7 +265,7 @@ public class FileRedoLog implements RedoLog, Closeable {
     return file.getFilePointer();
   }
 
-  protected void checkpoint() throws IOException {
+  protected void checkpoint() {
     memoryNode.sync();
   }
 
@@ -285,8 +278,7 @@ public class FileRedoLog implements RedoLog, Closeable {
     if (file.length() == 0) {
       return;
     }
-    FileInputStream fileIn = new FileInputStream(file.getFD());
-    try {
+    try (FileInputStream fileIn = new FileInputStream(file.getFD())) {
       CountingInputStream countingIn = new CountingInputStream(new BufferedInputStream(fileIn));
       DataInputStream in = new DataInputStream(countingIn);
       long position = 0;
@@ -315,8 +307,6 @@ public class FileRedoLog implements RedoLog, Closeable {
         // truncate log file
         file.setLength(position);
       }
-    } finally {
-      fileIn.close();
     }
   }
 

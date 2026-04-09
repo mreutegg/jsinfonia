@@ -27,7 +27,6 @@ import org.apache.people.mreutegg.jsinfonia.thrift.TItemReference;
 import org.apache.people.mreutegg.jsinfonia.thrift.TMemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.thrift.TMiniTransaction;
 import org.apache.people.mreutegg.jsinfonia.thrift.TResponse;
-import org.apache.thrift.TException;
 
 public class ApplicationNodeServiceImpl implements ApplicationNodeService.Iface {
 
@@ -38,7 +37,7 @@ public class ApplicationNodeServiceImpl implements ApplicationNodeService.Iface 
   }
 
   @Override
-  public List<TMemoryNodeInfo> getMemoryNodeInfos() throws TException {
+  public List<TMemoryNodeInfo> getMemoryNodeInfos() {
     List<TMemoryNodeInfo> infos = new ArrayList<>();
     for (MemoryNodeInfo mni : appNode.getMemoryNodeInfos().values()) {
       TMemoryNodeInfo info = new TMemoryNodeInfo();
@@ -51,13 +50,12 @@ public class ApplicationNodeServiceImpl implements ApplicationNodeService.Iface 
   }
 
   @Override
-  public TResponse executeTransaction(TMiniTransaction tx) throws TException {
+  public TResponse executeTransaction(TMiniTransaction tx) {
     MiniTransaction miniTx = Utils.convert(tx);
     TResponse response = Utils.convert(appNode.executeTransaction(miniTx));
     if (response.isSuccess()) {
       List<Item> readItems = miniTx.getReadItems();
-      for (int i = 0; i < readItems.size(); i++) {
-        Item readItem = readItems.get(i);
+      for (Item readItem : readItems) {
         TItem item = new TItem();
         TItemReference ref = new TItemReference();
         ref.setMemoryNodeId(readItem.getMemoryNodeId());

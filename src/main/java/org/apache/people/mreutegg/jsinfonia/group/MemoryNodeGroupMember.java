@@ -64,7 +64,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
   private final JChannel channel;
 
   private final Map<String, ExecuteAndPrepareMessage> bufferedMessages =
-      Collections.synchronizedMap(new HashMap<String, ExecuteAndPrepareMessage>());
+      Collections.synchronizedMap(new HashMap<>());
 
   private final Striped<Lock> locks = Striped.lock(16);
 
@@ -110,7 +110,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
   // ----------------------< MemoryNodeMessageVisitor >-----------------------
 
   @Override
-  public void visit(ExecuteAndPrepareMessage msg) throws IOException {
+  public void visit(ExecuteAndPrepareMessage msg) {
     if (channel.getAddress().equals(primaryAddress)) {
       executeAndPrepareOnPrimary(msg.getMiniTransaction(), msg.getMemoryNodeIds());
     } else {
@@ -216,7 +216,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
     }
 
     @Override
-    public void setState(InputStream input) throws Exception {
+    public void setState(InputStream input) {
       // TODO Auto-generated method stub
     }
 

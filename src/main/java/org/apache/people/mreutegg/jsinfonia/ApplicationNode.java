@@ -24,7 +24,7 @@ public interface ApplicationNode {
    *
    * @return the <code>MiniTransaction</code>.
    */
-  public MiniTransaction createMiniTransaction();
+  MiniTransaction createMiniTransaction();
 
   /**
    * Returns information about the currently available memory nodes. The keys of the map identify
@@ -32,7 +32,7 @@ public interface ApplicationNode {
    *
    * @return the memory node infos.
    */
-  public Map<Integer, MemoryNodeInfo> getMemoryNodeInfos();
+  Map<Integer, MemoryNodeInfo> getMemoryNodeInfos();
 
   /**
    * Executes the given <code>MiniTransaction</code> and returns the response.
@@ -40,5 +40,5 @@ public interface ApplicationNode {
    * @param tx the <code>MiniTransaction</code> to execute.
    * @return the response.
    */
-  public Response executeTransaction(MiniTransaction tx);
+  Response executeTransaction(MiniTransaction tx);
 }

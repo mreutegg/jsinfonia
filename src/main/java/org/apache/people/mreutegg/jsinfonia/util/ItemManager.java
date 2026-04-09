@@ -25,12 +25,12 @@ public interface ItemManager {
    *
    * @return reference to the allocated item or <code>null</code> if none is free anymore.
    */
-  public ItemReference alloc();
+  ItemReference alloc();
 
   /**
    * Frees the item with the given reference and makes it available again to others.
    *
    * @param ref reference to the item to free.
    */
-  public void free(ItemReference ref);
+  void free(ItemReference ref);
 }

@@ -34,7 +34,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
   }
 
   public LinearHashMap(int entriesPerBucket) {
-    this(new MemoryBucketStore<K, V>(entriesPerBucket));
+    this(new MemoryBucketStore<>(entriesPerBucket));
   }
 
   public LinearHashMap(BucketStore<K, V> bucketStore) {
@@ -117,7 +117,7 @@ public class LinearHashMap<K, V> extends AbstractMap<K, V> {
 
     @Override
     public Iterator<Map.Entry<K, V>> iterator() {
-      return new Iterator<Map.Entry<K, V>>() {
+      return new Iterator<>() {
 
         private int bucketIndex = 0;
 

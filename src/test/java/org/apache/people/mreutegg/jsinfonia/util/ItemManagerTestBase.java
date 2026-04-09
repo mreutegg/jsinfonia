@@ -73,7 +73,7 @@ public abstract class ItemManagerTestBase {
           return null;
         });
 
-    final List<Integer> allocs = Collections.synchronizedList(new ArrayList<Integer>());
+    final List<Integer> allocs = Collections.synchronizedList(new ArrayList<>());
     List<Thread> workers = new ArrayList<>();
     for (int i = 0; i < 10; i++) {
       workers.add(

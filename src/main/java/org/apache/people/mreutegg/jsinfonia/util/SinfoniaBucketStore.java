@@ -104,7 +104,7 @@ public class SinfoniaBucketStore<K, V> implements BucketStore<K, V> {
     this.headerRef = headerRef;
     this.reader = reader;
     this.writer = writer;
-    if (buckets.size() == 0) {
+    if (buckets.isEmpty()) {
       for (int i = 0; i < getInitialNumberOfBuckets(); i++) {
         buckets.add(createBucket());
       }
@@ -422,7 +422,7 @@ public class SinfoniaBucketStore<K, V> implements BucketStore<K, V> {
       List<ItemReference> toFree = new ArrayList<>();
       ItemReference nextRef = id;
       for (; ; ) {
-        nextRef = txContext.read(nextRef, data -> ItemReference.fromBuffer(data));
+        nextRef = txContext.read(nextRef, ItemReference::fromBuffer);
         if (nextRef.getMemoryNodeId() == NO_NEXT_MARKER) {
           break;
         } else {

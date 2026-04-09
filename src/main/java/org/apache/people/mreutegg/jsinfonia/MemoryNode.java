@@ -22,9 +22,9 @@ public interface MemoryNode {
   /**
    * @return information about this memory node.
    */
-  public MemoryNodeInfo getInfo();
+  MemoryNodeInfo getInfo();
 
-  public Result executeAndPrepare(MiniTransaction tx, Set<Integer> memoryNodeIds);
+  Result executeAndPrepare(MiniTransaction tx, Set<Integer> memoryNodeIds);
 
-  public void commit(String txId, boolean commit);
+  void commit(String txId, boolean commit);
 }

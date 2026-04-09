@@ -29,7 +29,7 @@ import org.apache.people.mreutegg.jsinfonia.RedoLog;
 class InMemoryRedoLog implements RedoLog {
 
   private final Map<String, MiniTransaction> loggedTransactions =
-      Collections.synchronizedMap(new HashMap<String, MiniTransaction>());
+      Collections.synchronizedMap(new HashMap<>());
 
   private final InMemoryMemoryNode memoryNode;
 
@@ -50,11 +50,9 @@ class InMemoryRedoLog implements RedoLog {
 
   @Override
   public Set<String> getTransactionIDs() {
-    Set<String> txIds = new HashSet<>();
+    Set<String> txIds;
     synchronized (loggedTransactions) {
-      for (String txId : loggedTransactions.keySet()) {
-        txIds.add(txId);
-      }
+      txIds = new HashSet<>(loggedTransactions.keySet());
     }
     return txIds;
   }

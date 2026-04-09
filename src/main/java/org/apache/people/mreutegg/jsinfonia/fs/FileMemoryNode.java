@@ -65,7 +65,7 @@ public class FileMemoryNode extends AbstractMemoryNode implements Closeable {
   }
 
   @Override
-  protected void readData(int address, int offset, ByteBuffer buffer) throws IOException {
+  protected void readData(int address, int offset, ByteBuffer buffer) {
     checkReadBuffer(buffer, offset);
     // check buffer for dirty items first
     ByteBuffer src = itemBuffer.getItem(address);

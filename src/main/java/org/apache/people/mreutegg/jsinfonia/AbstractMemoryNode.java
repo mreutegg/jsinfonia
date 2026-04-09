@@ -29,10 +29,9 @@ public abstract class AbstractMemoryNode implements MemoryNode {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractMemoryNode.class);
 
-  private final Map<String, Locks> inDoubt =
-      Collections.synchronizedMap(new HashMap<String, Locks>());
+  private final Map<String, Locks> inDoubt = Collections.synchronizedMap(new HashMap<>());
 
-  private final Set<String> forcedAbort = Collections.synchronizedSet(new HashSet<String>());
+  private final Set<String> forcedAbort = Collections.synchronizedSet(new HashSet<>());
 
   private final Map<Integer, Integer> readLocks = new HashMap<>();
 

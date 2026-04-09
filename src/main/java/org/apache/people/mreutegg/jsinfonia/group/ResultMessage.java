@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,7 @@ import org.apache.people.mreutegg.jsinfonia.Vote;
 
 public final class ResultMessage extends MemoryNodeMessage {
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
+  private static final Charset UTF8 = StandardCharsets.UTF_8;
 
   private final Result result;
   private final MiniTransaction tx;

@@ -24,28 +24,28 @@ public interface BucketStore<K, V> {
    *
    * @return the initial number of buckets to allocate.
    */
-  public int getInitialNumberOfBuckets();
+  int getInitialNumberOfBuckets();
 
-  public int getSplitIndex();
+  int getSplitIndex();
 
-  public int incrementAndGetSplitIndex();
+  int incrementAndGetSplitIndex();
 
-  public void resetSplitIndex();
+  void resetSplitIndex();
 
-  public int getLevel();
+  int getLevel();
 
-  public void incrementLevel();
+  void incrementLevel();
 
-  public int getSize();
+  int getSize();
 
-  public List<MapBucket<K, V>> getBucketList();
+  List<MapBucket<K, V>> getBucketList();
 
   /**
    * Allocates / creates a new bucket.
    *
    * @return a new bucket
    */
-  public MapBucket<K, V> createBucket();
+  MapBucket<K, V> createBucket();
 
   /**
    * Gets an existing bucket.
@@ -53,12 +53,12 @@ public interface BucketStore<K, V> {
    * @param id the bucket id.
    * @return the bucket with the id or null if there is no existing bucket with the given id.
    */
-  public MapBucket<K, V> getBucket(BucketId id);
+  MapBucket<K, V> getBucket(BucketId id);
 
   /**
    * Disposes the bucket with the given id.
    *
    * @param id the id of the bucket to dispose.
    */
-  public void disposeBucket(BucketId id);
+  void disposeBucket(BucketId id);
 }

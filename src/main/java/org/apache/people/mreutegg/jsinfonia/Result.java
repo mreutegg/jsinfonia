@@ -34,7 +34,7 @@ public class Result {
   private final Vote vote;
 
   private Result(Vote vote) {
-    this(vote, Collections.<ItemReference>emptyList());
+    this(vote, Collections.emptyList());
   }
 
   private Result(Vote vote, Iterable<ItemReference> failedCompares) {

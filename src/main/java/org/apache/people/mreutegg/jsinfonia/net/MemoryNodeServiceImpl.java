@@ -55,8 +55,7 @@ public class MemoryNodeServiceImpl implements MemoryNodeService.Iface {
     TResult result = Utils.convert(r);
     if (r.getVote() == Vote.OK) {
       List<Item> readItems = miniTx.getReadItems();
-      for (int i = 0; i < readItems.size(); i++) {
-        Item readItem = readItems.get(i);
+      for (Item readItem : readItems) {
         TItem item = new TItem();
         TItemReference ref = new TItemReference();
         ref.setMemoryNodeId(memoryNode.getInfo().getId());

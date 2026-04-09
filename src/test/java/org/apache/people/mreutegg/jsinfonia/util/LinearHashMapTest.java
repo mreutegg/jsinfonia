@@ -96,7 +96,7 @@ class LinearHashMapTest {
         size++;
         // System.out.println(map);
         // System.out.println("get(" + i + ") : " + map.get(i));
-        assertEquals((Integer) i, (Integer) map.get(i));
+        assertEquals((Integer) i, map.get(i));
         assertEquals(size, map.size());
       }
       for (int i = 0; i < numEntries; i++) {
@@ -143,7 +143,7 @@ class LinearHashMapTest {
     long time = System.currentTimeMillis();
     final ApplicationNode appNode = getApplicationNode();
     initializeSinfoniaHashMap();
-    final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
+    final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
     List<Thread> workers = new ArrayList<>();
     for (int i = 0; i < numThreads; i++) {
       workers.add(

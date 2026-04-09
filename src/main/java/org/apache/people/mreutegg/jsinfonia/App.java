@@ -18,6 +18,6 @@ package org.apache.people.mreutegg.jsinfonia;
 /** Hello world! */
 public class App {
   public static void main(String[] args) {
-    System.out.println(Vote.OK.toString());
+    System.out.println(Vote.OK);
   }
 }

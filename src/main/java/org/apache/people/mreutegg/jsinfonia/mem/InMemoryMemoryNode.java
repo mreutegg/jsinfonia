@@ -15,7 +15,6 @@
  */
 package org.apache.people.mreutegg.jsinfonia.mem;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +46,7 @@ public class InMemoryMemoryNode extends AbstractMemoryNode {
   }
 
   @Override
-  protected void readData(int address, int offset, ByteBuffer buffer) throws IOException {
+  protected void readData(int address, int offset, ByteBuffer buffer) {
     checkReadBuffer(buffer, offset);
     ByteBuffer data;
     Item item = items.get(address);

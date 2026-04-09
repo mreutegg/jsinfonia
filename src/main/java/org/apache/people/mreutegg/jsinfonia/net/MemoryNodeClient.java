@@ -42,7 +42,7 @@ public class MemoryNodeClient extends ThriftClient<Client> implements MemoryNode
   public MemoryNodeClient(String host, int port, int numConnections, boolean framed)
       throws TException {
     super(host, port, numConnections, framed);
-    TMemoryNodeInfo info = executeWithClient(client -> client.getInfo());
+    TMemoryNodeInfo info = executeWithClient(Client::getInfo);
     this.info = new SimpleMemoryNodeInfo(info.getId(), info.getAddressSpace(), info.getItemSize());
   }
 

@@ -113,7 +113,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
 
   @Override
   public Iterator<E> iterator() {
-    return new Iterator<E>() {
+    return new Iterator<>() {
 
       final Iterator<Iterator<E>> iterators = getBucketReaders();
       Iterator<E> currentIt = nextIterator();
@@ -244,7 +244,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
   }
 
   private Iterator<Iterator<E>> getBucketReaders() {
-    return new Iterator<Iterator<E>>() {
+    return new Iterator<>() {
 
       ItemReference nextBucketRef = getHeadRef();
       Iterator<E> nextIt = getIterator();
@@ -260,7 +260,7 @@ public class SinfoniaList<E> extends AbstractList<E> {
           throw new NoSuchElementException();
         }
         Iterator<E> next = nextIt;
-        nextBucketRef = txContext.read(nextBucketRef, data -> ItemReference.fromBuffer(data));
+        nextBucketRef = txContext.read(nextBucketRef, ItemReference::fromBuffer);
         nextIt = getIterator();
         return next;
       }

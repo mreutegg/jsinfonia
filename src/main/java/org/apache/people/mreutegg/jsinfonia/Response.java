@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class Response {
 
-  public static final Response SUCCESS = new Response(true, Collections.<ItemReference>emptyList());
+  public static final Response SUCCESS = new Response(true, Collections.emptyList());
 
   private final boolean isSuccess;
 

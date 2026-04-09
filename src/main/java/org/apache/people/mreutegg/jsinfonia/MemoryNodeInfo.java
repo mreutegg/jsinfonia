@@ -20,15 +20,15 @@ public interface MemoryNodeInfo {
   /**
    * @return the identifier for this memory node.
    */
-  public int getId();
+  int getId();
 
   /**
    * @return the number of addressable items in this memory node.
    */
-  public int getAddressSpace();
+  int getAddressSpace();
 
   /**
    * @return the data size of an item on this memory node.
    */
-  public int getItemSize();
+  int getItemSize();
 }

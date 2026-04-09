@@ -21,10 +21,9 @@ import java.util.Set;
 
 public interface RedoLog {
 
-  public void append(String txId, List<Item> writeItems, Set<Integer> memoryNodeIds)
-      throws IOException;
+  void append(String txId, List<Item> writeItems, Set<Integer> memoryNodeIds) throws IOException;
 
-  public Set<String> getTransactionIDs();
+  Set<String> getTransactionIDs();
 
-  public void decided(String txId, boolean commit);
+  void decided(String txId, boolean commit);
 }

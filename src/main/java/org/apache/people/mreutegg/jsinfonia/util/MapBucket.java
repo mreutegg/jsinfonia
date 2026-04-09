@@ -17,7 +17,7 @@ package org.apache.people.mreutegg.jsinfonia.util;
 
 import java.util.Map;
 
-interface MapBucket<K, V> {
+public interface MapBucket<K, V> {
 
   /**
    * Returns the value for the given <code>key</code> or <code>null</code> if it doesn't exist in
@@ -26,19 +26,19 @@ interface MapBucket<K, V> {
    * @param key the key.
    * @return the associated value or <code>null</code> if it doesn't exist.
    */
-  public V get(Object key);
+  V get(Object key);
 
   /**
    * Returns all the keys in this bucket.
    *
    * @return all the keys in this bucket.
    */
-  public Iterable<K> getKeys();
+  Iterable<K> getKeys();
 
   /**
    * @return the number of entries in this bucket.
    */
-  public int getSize();
+  int getSize();
 
   /**
    * Puts the given <code>key</code>/<code>value</code> pair into this bucket.
@@ -48,7 +48,7 @@ interface MapBucket<K, V> {
    * @return the value previously mapped to the given <code>key</code> or <code>null</code> if no
    *     such key was present in this bucket.
    */
-  public V put(K key, V value);
+  V put(K key, V value);
 
   /**
    * Removes the value for the given key and returns the associated value. This method returns
@@ -57,17 +57,17 @@ interface MapBucket<K, V> {
    * @param key the key.
    * @return the associated value or <code>null</code>.
    */
-  public V remove(Object key);
+  V remove(Object key);
 
   /**
    * @return <code>true</code> if this bucket is overflowed; <code>false</code> otherwise.
    */
-  public boolean isOverflowed();
+  boolean isOverflowed();
 
   /**
    * @return the id of this bucket.
    */
-  public BucketId getId();
+  BucketId getId();
 
   /**
    * Transfers all entries of this bucket into the given <code>map</code>. The entries in this
@@ -75,5 +75,5 @@ interface MapBucket<K, V> {
    *
    * @param map the map where to transfer the entries to.
    */
-  public void transferTo(Map<K, V> map);
+  void transferTo(Map<K, V> map);
 }
