@@ -37,6 +37,7 @@ import org.apache.people.mreutegg.jsinfonia.Result;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.Vote;
 import org.jgroups.Address;
+import org.jgroups.BytesMessage;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.Receiver;
@@ -94,7 +95,8 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
           () -> {
             try {
               // TODO: send message to MemoryNodeGroupMembers only
-              channel.send(ExecuteAndPrepareMessage.fromMiniTransaction(tx, memoryNodeIds));
+              MemoryNodeMessage msg = ExecuteAndPrepareMessage.fromMiniTransaction(tx, memoryNodeIds);
+              channel.send(new BytesMessage(null, msg.encode()));
             } catch (Exception e) {
               future.setException(e);
             }
@@ -120,7 +122,8 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
     executor.submit(
         () -> {
           // TODO: send message to MemoryNodeGroupMembers only
-          channel.send(CommitMessage.fromString(txId, commit));
+          MemoryNodeMessage msg = CommitMessage.fromString(txId, commit);
+          channel.send(new BytesMessage(null, msg.encode()));
           return null;
         });
   }
@@ -164,7 +167,7 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
     @Override
     public void receive(Message msg) {
       try {
-        MemoryNodeMessage.fromBuffer(msg.getBuffer()).accept(MemoryNodeGroupClient.this);
+        MemoryNodeMessage.fromBuffer(msg.getArray()).accept(MemoryNodeGroupClient.this);
       } catch (IOException e) {
         log.warn("Exception on message receive", e);
       }
@@ -188,27 +191,6 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
     }
 
     @Override
-    public void viewAccepted(View new_view) {
-      // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void suspect(Address suspected_mbr) {
-      // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void block() {
-      // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void unblock() {
-      // TODO Auto-generated method stub
-
-    }
+    public void viewAccepted(View new_view) {}
   }
 }

@@ -48,9 +48,7 @@ public final class ResultMessage extends MemoryNodeMessage {
   }
 
   static ResultMessage fromResult(Result result, MiniTransaction tx) {
-    ResultMessage msg = new ResultMessage(result, tx);
-    msg.setBuffer(msg.asBuffer().array());
-    return msg;
+    return new ResultMessage(result, tx);
   }
 
   static ResultMessage fromBuffer(byte[] buffer) {
@@ -94,9 +92,7 @@ public final class ResultMessage extends MemoryNodeMessage {
     for (int i = 0; i < numReadItems; i++) {
       mt.addReadItem(readItem(data, false));
     }
-    ResultMessage msg = new ResultMessage(result, mt);
-    msg.setBuffer(buffer);
-    return msg;
+    return new ResultMessage(result, mt);
   }
 
   Result getResult() {
@@ -112,6 +108,11 @@ public final class ResultMessage extends MemoryNodeMessage {
   @Override
   void accept(MemoryNodeMessageVisitor visitor) throws IOException {
     visitor.visit(this);
+  }
+
+  @Override
+  byte[] encode() {
+    return asBuffer().array();
   }
 
   // --------------------------< internal >-----------------------------------

@@ -39,9 +39,7 @@ public final class ExecuteAndPrepareMessage extends MemoryNodeMessage {
 
   public static ExecuteAndPrepareMessage fromMiniTransaction(
       MiniTransaction tx, Set<Integer> memoryNodeIds) {
-    ExecuteAndPrepareMessage msg = new ExecuteAndPrepareMessage(tx, memoryNodeIds);
-    msg.setBuffer(msg.asByteBuffer().array());
-    return msg;
+    return new ExecuteAndPrepareMessage(tx, memoryNodeIds);
   }
 
   public static ExecuteAndPrepareMessage fromBuffer(byte[] buffer) {
@@ -70,9 +68,7 @@ public final class ExecuteAndPrepareMessage extends MemoryNodeMessage {
     for (int i = 0; i < numMemoryNodeIds; i++) {
       memoryNodeIds.add(data.getInt());
     }
-    ExecuteAndPrepareMessage msg = new ExecuteAndPrepareMessage(tx, memoryNodeIds);
-    msg.setBuffer(buffer);
-    return msg;
+    return new ExecuteAndPrepareMessage(tx, memoryNodeIds);
   }
 
   public MiniTransaction getMiniTransaction() {
@@ -88,6 +84,11 @@ public final class ExecuteAndPrepareMessage extends MemoryNodeMessage {
   @Override
   void accept(MemoryNodeMessageVisitor visitor) throws IOException {
     visitor.visit(this);
+  }
+
+  @Override
+  byte[] encode() {
+    return asByteBuffer().array();
   }
 
   // -----------------------------< internal >--------------------------------

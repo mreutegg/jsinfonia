@@ -42,10 +42,10 @@ import org.apache.people.mreutegg.jsinfonia.Result;
 import org.apache.people.mreutegg.jsinfonia.Vote;
 import org.apache.people.mreutegg.jsinfonia.util.ByteBufferInputStream;
 import org.jgroups.Address;
+import org.jgroups.BytesMessage;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.Receiver;
-import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
@@ -88,7 +88,8 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
     this.channel.setName(CHANNEL_NAME);
     this.channel.setDiscardOwnMessages(true);
     this.channel.setReceiver(new CommunicationReceiver());
-    this.channel.connect("MemoryNodeGroup-" + memoryNode.getInfo().getId(), null, 60L * 1000, true);
+    this.channel.connect("MemoryNodeGroup-" + memoryNode.getInfo().getId());
+    this.channel.getState(null, 60L * 1000);
   }
 
   // ------------------------------< Closeable >------------------------------
@@ -184,7 +185,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
     executor.execute(
         () -> {
           try {
-            channel.send(msg);
+            channel.send(new BytesMessage(null, msg.encode()));
           } catch (Exception e) {
             log.error("Unable to send message", e);
           }
@@ -198,7 +199,7 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
     @Override
     public void receive(Message msg) {
       try {
-        MemoryNodeMessage mnm = MemoryNodeMessage.fromBuffer(msg.getBuffer());
+        MemoryNodeMessage mnm = MemoryNodeMessage.fromBuffer(msg.getArray());
         mnm.accept(MemoryNodeGroupMember.this);
       } catch (IOException e) {
         // TODO: how to recover from this?
@@ -234,29 +235,12 @@ public class MemoryNodeGroupMember implements MemoryNodeMessageVisitor, Closeabl
         primaryAddress = sortedGroupMembers.iterator().next();
       }
     }
-
-    @Override
-    public void suspect(Address suspected_mbr) {
-      log.info("suspect({}})", suspected_mbr);
-    }
-
-    @Override
-    public void block() {
-      // TODO: implement
-      log.info("block()");
-    }
-
-    @Override
-    public void unblock() {
-      // TODO: implement
-      log.info("unblock()");
-    }
   }
 
   // ------------------------< Replication Receiver >-------------------------
 
   // TODO: remove
-  private final class ReplicationReceiver extends ReceiverAdapter {
+  private final class ReplicationReceiver implements Receiver {
 
     @Override
     public void getState(OutputStream output) throws Exception {

@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>org.jgroups</groupId>
 			<artifactId>jgroups</artifactId>
-			<version>4.0.0.Final</version>
+			<version>5.5.5.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

@@ -18,9 +18,8 @@ package org.apache.people.mreutegg.jsinfonia.group;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.apache.people.mreutegg.jsinfonia.Item;
-import org.jgroups.Message;
 
-abstract class MemoryNodeMessage extends Message {
+abstract class MemoryNodeMessage {
 
   static final byte TYPE_COMMIT_MESSAGE = 0;
 
@@ -30,11 +29,11 @@ abstract class MemoryNodeMessage extends Message {
 
   static final byte TYPE_GET_ADDRESS_SPACE_MESSAGE = 3;
 
-  public MemoryNodeMessage() {
-    setFlag(Message.Flag.DONT_BUNDLE);
-  }
+  public MemoryNodeMessage() {}
 
   abstract void accept(MemoryNodeMessageVisitor visitor) throws IOException;
+
+  abstract byte[] encode();
 
   static MemoryNodeMessage fromBuffer(byte[] buffer) {
     MemoryNodeMessage mnm;

@@ -35,9 +35,7 @@ public final class CommitMessage extends MemoryNodeMessage {
   }
 
   static CommitMessage fromString(String txId, boolean commit) {
-    CommitMessage msg = new CommitMessage(txId, commit);
-    msg.setBuffer(msg.asByteBuffer().array());
-    return msg;
+    return new CommitMessage(txId, commit);
   }
 
   static CommitMessage fromBuffer(byte[] buffer) {
@@ -48,9 +46,7 @@ public final class CommitMessage extends MemoryNodeMessage {
     for (int i = 0; i < len; i++) {
       sb.append(data.getChar());
     }
-    CommitMessage msg = new CommitMessage(sb.toString(), data.get() == 0);
-    msg.setBuffer(buffer);
-    return msg;
+    return new CommitMessage(sb.toString(), data.get() == 0);
   }
 
   public String getTransactionId() {
@@ -66,6 +62,11 @@ public final class CommitMessage extends MemoryNodeMessage {
   @Override
   void accept(MemoryNodeMessageVisitor visitor) throws IOException {
     visitor.visit(this);
+  }
+
+  @Override
+  byte[] encode() {
+    return asByteBuffer().array();
   }
 
   ByteBuffer asByteBuffer() {
