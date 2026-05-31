@@ -36,7 +36,6 @@ import org.apache.people.mreutegg.jsinfonia.MiniTransaction;
 import org.apache.people.mreutegg.jsinfonia.Result;
 import org.apache.people.mreutegg.jsinfonia.SimpleMemoryNodeInfo;
 import org.apache.people.mreutegg.jsinfonia.Vote;
-import org.jgroups.Address;
 import org.jgroups.BytesMessage;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
@@ -95,7 +94,8 @@ public class MemoryNodeGroupClient implements Closeable, MemoryNode, MemoryNodeM
           () -> {
             try {
               // TODO: send message to MemoryNodeGroupMembers only
-              MemoryNodeMessage msg = ExecuteAndPrepareMessage.fromMiniTransaction(tx, memoryNodeIds);
+              MemoryNodeMessage msg =
+                  ExecuteAndPrepareMessage.fromMiniTransaction(tx, memoryNodeIds);
               channel.send(new BytesMessage(null, msg.encode()));
             } catch (Exception e) {
               future.setException(e);

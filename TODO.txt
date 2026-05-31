@@ -11,5 +11,3 @@ Major topics:
 - Replication / primary-backup implementation for MemoryNodes
 
 - Replicated versions of Items (->Sinfonia paper)
-
-- BTree implementation 
