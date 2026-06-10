@@ -128,15 +128,10 @@ public class SimpleApplicationNode implements ApplicationNode {
     }
     if (callables.size() == 1) {
       // optimize single memory node
-      if (tx.getWriteItems().isEmpty()) {
-        // no commit needed when read-only
-      } else {
-        SettableFuture<Result> f = SettableFuture.create();
-        try {
-          f.set(callables.get(0).call());
-        } catch (Exception e) {
-          log.warn("Exception on commit", e);
-        }
+      try {
+        callables.get(0).call();
+      } catch (Exception e) {
+        log.warn("Exception on commit", e);
       }
     } else {
       try {

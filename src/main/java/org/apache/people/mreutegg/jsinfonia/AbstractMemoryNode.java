@@ -140,7 +140,8 @@ public abstract class AbstractMemoryNode implements MemoryNode {
     // synchronize on writeLocks
     synchronized (writeLocks) {
       if (Collections.disjoint(writeLocks, locks.readSet)
-          && Collections.disjoint(writeLocks, locks.writeSet)) {
+          && Collections.disjoint(writeLocks, locks.writeSet)
+          && Collections.disjoint(readLocks.keySet(), locks.writeSet)) {
         log.debug("Acquire locks: writeSet={} readSet={}", locks.writeSet, locks.readSet);
         writeLocks.addAll(locks.writeSet);
         for (Integer address : locks.readSet) {
