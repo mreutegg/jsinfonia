@@ -856,4 +856,8 @@ public class BTree<K, V> {
       }
     };
   }
+
+  public Comparator<? super K> comparator() {
+    return comparator;
+  }
 }
