@@ -36,6 +36,10 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
   private final boolean toInclusive;
   private final boolean descending;
 
+  private enum BoundType {
+    LOWER, FLOOR, CEILING, HIGHER
+  }
+
   public SinfoniaNavigableMap(BTree<K, V> btree) {
     this(btree, null, true, null, true, false);
   }
@@ -145,7 +149,7 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
 
   @Override
   public Map.Entry<K, V> lowerEntry(K key) {
-    return getBoundedEntry("lower", key);
+    return getBoundedEntry(BoundType.LOWER, key);
   }
 
   @Override
@@ -156,7 +160,7 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
 
   @Override
   public Map.Entry<K, V> floorEntry(K key) {
-    return getBoundedEntry("floor", key);
+    return getBoundedEntry(BoundType.FLOOR, key);
   }
 
   @Override
@@ -167,7 +171,7 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
 
   @Override
   public Map.Entry<K, V> ceilingEntry(K key) {
-    return getBoundedEntry("ceiling", key);
+    return getBoundedEntry(BoundType.CEILING, key);
   }
 
   @Override
@@ -178,7 +182,7 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
 
   @Override
   public Map.Entry<K, V> higherEntry(K key) {
-    return getBoundedEntry("higher", key);
+    return getBoundedEntry(BoundType.HIGHER, key);
   }
 
   @Override
@@ -362,16 +366,16 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
     return maxInclusive ? cmp > 0 : cmp >= 0;
   }
 
-  private Map.Entry<K, V> getBoundedEntry(String type, K key) {
+  private Map.Entry<K, V> getBoundedEntry(BoundType type, K key) {
     if (isBefore(key)) {
       if (descending) {
-        if ("floor".equals(type) || "lower".equals(type)) {
+        if (type == BoundType.FLOOR || type == BoundType.LOWER) {
           return null;
         }
         // ceiling or higher -> first entry of descending map (underlying maxKey)
         return lastEntryUnderlying();
       } else {
-        if ("floor".equals(type) || "lower".equals(type)) {
+        if (type == BoundType.FLOOR || type == BoundType.LOWER) {
           return null;
         }
         // ceiling or higher -> first entry of map
@@ -381,13 +385,13 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
 
     if (isAfter(key)) {
       if (descending) {
-        if ("ceiling".equals(type) || "higher".equals(type)) {
+        if (type == BoundType.CEILING || type == BoundType.HIGHER) {
           return null;
         }
         // floor or lower -> last entry of descending map (underlying minKey)
         return firstEntryUnderlying();
       } else {
-        if ("ceiling".equals(type) || "higher".equals(type)) {
+        if (type == BoundType.CEILING || type == BoundType.HIGHER) {
           return null;
         }
         // floor or lower -> last entry of map
@@ -398,16 +402,16 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
     Map.Entry<K, V> candidate;
     if (descending) {
       switch (type) {
-        case "floor":
+        case FLOOR:
           candidate = btree.ceilingEntry(key);
           break;
-        case "ceiling":
+        case CEILING:
           candidate = btree.floorEntry(key);
           break;
-        case "lower":
+        case LOWER:
           candidate = btree.higherEntry(key);
           break;
-        case "higher":
+        case HIGHER:
           candidate = btree.lowerEntry(key);
           break;
         default:
@@ -415,16 +419,16 @@ public class SinfoniaNavigableMap<K, V> extends AbstractMap<K, V> implements Nav
       }
     } else {
       switch (type) {
-        case "floor":
+        case FLOOR:
           candidate = btree.floorEntry(key);
           break;
-        case "ceiling":
+        case CEILING:
           candidate = btree.ceilingEntry(key);
           break;
-        case "lower":
+        case LOWER:
           candidate = btree.lowerEntry(key);
           break;
-        case "higher":
+        case HIGHER:
           candidate = btree.higherEntry(key);
           break;
         default:
