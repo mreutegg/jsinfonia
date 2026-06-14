@@ -19,6 +19,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
+import org.apache.people.mreutegg.jsinfonia.data.DataOperation;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
 
@@ -29,6 +30,30 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
   private final ItemReference headerRef;
   private final BucketReader<Entry<K, V>> reader;
   private final BucketWriter<Entry<K, V>> writer;
+
+  private final ThreadLocal<TransactionContext> currentTxContext = new ThreadLocal<>();
+
+  private final TransactionContext activeTxContext = new TransactionContext() {
+    @Override
+    public <T> T read(ItemReference reference, DataOperation<T> op) {
+      TransactionContext ctx = currentTxContext.get();
+      if (ctx == null) {
+        ctx = txManager;
+      }
+      return ctx.read(reference, op);
+    }
+
+    @Override
+    public <T> T write(ItemReference reference, DataOperation<T> op) {
+      TransactionContext ctx = currentTxContext.get();
+      if (ctx == null) {
+        ctx = txManager;
+      }
+      return ctx.write(reference, op);
+    }
+  };
+
+  private volatile Map<K, V> map;
 
   public SinfoniaHashMap(
       TransactionManager txManager,
@@ -45,7 +70,15 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
 
   @Override
   public Set<Map.Entry<K, V>> entrySet() {
-    return txManager.execute(txContext -> createMap(txContext).entrySet());
+    return txManager.execute(
+        txContext -> {
+          currentTxContext.set(txContext);
+          try {
+            return getMap().entrySet();
+          } finally {
+            currentTxContext.remove();
+          }
+        });
   }
 
   @Override
@@ -56,17 +89,41 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
     if (value == null) {
       throw new NullPointerException("value must not be null");
     }
-    return txManager.execute(txContext -> createMap(txContext).put(key, value));
+    return txManager.execute(
+        txContext -> {
+          currentTxContext.set(txContext);
+          try {
+            return getMap().put(key, value);
+          } finally {
+            currentTxContext.remove();
+          }
+        });
   }
 
   @Override
   public V remove(final Object key) {
-    return txManager.execute(txContext -> createMap(txContext).remove(key));
+    return txManager.execute(
+        txContext -> {
+          currentTxContext.set(txContext);
+          try {
+            return getMap().remove(key);
+          } finally {
+            currentTxContext.remove();
+          }
+        });
   }
 
   @Override
   public V get(final Object key) {
-    return txManager.execute(txContext -> createMap(txContext).get(key));
+    return txManager.execute(
+        txContext -> {
+          currentTxContext.set(txContext);
+          try {
+            return getMap().get(key);
+          } finally {
+            currentTxContext.remove();
+          }
+        });
   }
 
   @Override
@@ -78,17 +135,31 @@ public class SinfoniaHashMap<K, V> extends AbstractMap<K, V> {
   public void putAll(final Map<? extends K, ? extends V> m) {
     txManager.execute(
         txContext -> {
-          createMap(txContext).putAll(m);
-          return null;
+          currentTxContext.set(txContext);
+          try {
+            getMap().putAll(m);
+            return null;
+          } finally {
+            currentTxContext.remove();
+          }
         });
   }
 
   // -------------------------------< internal >------------------------------
 
-  private Map<K, V> createMap(TransactionContext txContext) {
-    SinfoniaBucketStore<K, V> store =
-        new SinfoniaBucketStore<>(
-            factory.createItemManager(txContext), txContext, headerRef, reader, writer);
-    return new LinearHashMap<>(store);
+  private Map<K, V> getMap() {
+    Map<K, V> m = map;
+    if (m == null) {
+      synchronized (this) {
+        m = map;
+        if (m == null) {
+          SinfoniaBucketStore<K, V> store =
+              new SinfoniaBucketStore<>(
+                  factory.createItemManager(activeTxContext), activeTxContext, headerRef, reader, writer);
+          m = map = new LinearHashMap<>(store);
+        }
+      }
+    }
+    return m;
   }
 }
