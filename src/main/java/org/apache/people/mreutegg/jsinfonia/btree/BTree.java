@@ -15,8 +15,12 @@
  */
 package org.apache.people.mreutegg.jsinfonia.btree;
 
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
@@ -504,5 +508,352 @@ public class BTree<K, V> {
       parent.keys.set(index, rightKey);
       parent.save();
     }
+  }
+
+  public Map.Entry<K, V> floorEntry(final K key) {
+    return txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, headerRef);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
+            if (i < 0) {
+              i = -i - 1;
+            } else {
+              i++;
+            }
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
+          }
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
+          if (i >= 0) {
+            return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(i), leaf.getValue(i));
+          } else {
+            int idx = -i - 1;
+            if (idx > 0) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(idx - 1), leaf.getValue(idx - 1));
+            } else {
+              if (leaf.getPrev() != null) {
+                LeafNode<K, V> prevLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getPrev(), keySerializer, valueSerializer);
+                int lastIdx = prevLeaf.getKeyCount() - 1;
+                return new AbstractMap.SimpleImmutableEntry<>(prevLeaf.getKey(lastIdx), prevLeaf.getValue(lastIdx));
+              }
+            }
+          }
+          return null;
+        });
+  }
+
+  public Map.Entry<K, V> ceilingEntry(final K key) {
+    return txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, headerRef);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
+            if (i < 0) {
+              i = -i - 1;
+            } else {
+              i++;
+            }
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
+          }
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
+          if (i >= 0) {
+            return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(i), leaf.getValue(i));
+          } else {
+            int idx = -i - 1;
+            if (idx < leaf.getKeyCount()) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(idx), leaf.getValue(idx));
+            } else {
+              if (leaf.getNext() != null) {
+                LeafNode<K, V> nextLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getNext(), keySerializer, valueSerializer);
+                return new AbstractMap.SimpleImmutableEntry<>(nextLeaf.getKey(0), nextLeaf.getValue(0));
+              }
+            }
+          }
+          return null;
+        });
+  }
+
+  public Map.Entry<K, V> lowerEntry(final K key) {
+    return txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, headerRef);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
+            if (i < 0) {
+              i = -i - 1;
+            } else {
+              i++;
+            }
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
+          }
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
+          if (i >= 0) {
+            if (i - 1 >= 0) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(i - 1), leaf.getValue(i - 1));
+            } else {
+              if (leaf.getPrev() != null) {
+                LeafNode<K, V> prevLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getPrev(), keySerializer, valueSerializer);
+                int lastIdx = prevLeaf.getKeyCount() - 1;
+                return new AbstractMap.SimpleImmutableEntry<>(prevLeaf.getKey(lastIdx), prevLeaf.getValue(lastIdx));
+              }
+            }
+          } else {
+            int idx = -i - 1;
+            if (idx > 0) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(idx - 1), leaf.getValue(idx - 1));
+            } else {
+              if (leaf.getPrev() != null) {
+                LeafNode<K, V> prevLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getPrev(), keySerializer, valueSerializer);
+                int lastIdx = prevLeaf.getKeyCount() - 1;
+                return new AbstractMap.SimpleImmutableEntry<>(prevLeaf.getKey(lastIdx), prevLeaf.getValue(lastIdx));
+              }
+            }
+          }
+          return null;
+        });
+  }
+
+  public Map.Entry<K, V> higherEntry(final K key) {
+    return txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, headerRef);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
+            if (i < 0) {
+              i = -i - 1;
+            } else {
+              i++;
+            }
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
+          }
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
+          if (i >= 0) {
+            if (i + 1 < leaf.getKeyCount()) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(i + 1), leaf.getValue(i + 1));
+            } else {
+              if (leaf.getNext() != null) {
+                LeafNode<K, V> nextLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getNext(), keySerializer, valueSerializer);
+                return new AbstractMap.SimpleImmutableEntry<>(nextLeaf.getKey(0), nextLeaf.getValue(0));
+              }
+            }
+          } else {
+            int idx = -i - 1;
+            if (idx < leaf.getKeyCount()) {
+              return new AbstractMap.SimpleImmutableEntry<>(leaf.getKey(idx), leaf.getValue(idx));
+            } else {
+              if (leaf.getNext() != null) {
+                LeafNode<K, V> nextLeaf = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getNext(), keySerializer, valueSerializer);
+                return new AbstractMap.SimpleImmutableEntry<>(nextLeaf.getKey(0), nextLeaf.getValue(0));
+              }
+            }
+          }
+          return null;
+        });
+  }
+
+  public K floorKey(final K key) {
+    Map.Entry<K, V> entry = floorEntry(key);
+    return entry != null ? entry.getKey() : null;
+  }
+
+  public K ceilingKey(final K key) {
+    Map.Entry<K, V> entry = ceilingEntry(key);
+    return entry != null ? entry.getKey() : null;
+  }
+
+  public K lowerKey(final K key) {
+    Map.Entry<K, V> entry = lowerEntry(key);
+    return entry != null ? entry.getKey() : null;
+  }
+
+  public K higherKey(final K key) {
+    Map.Entry<K, V> entry = higherEntry(key);
+    return entry != null ? entry.getKey() : null;
+  }
+
+  private LeafNode<K, V> getFirstLeaf(TransactionContext txContext) {
+    Metadata metadata = new Metadata(txContext, headerRef);
+    BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+    while (node instanceof InternalNode<K, V> internal) {
+      node = BTreeNode.load(txContext, internal.getChild(0), keySerializer, valueSerializer);
+    }
+    return (LeafNode<K, V>) node;
+  }
+
+  private LeafNode<K, V> getLastLeaf(TransactionContext txContext) {
+    Metadata metadata = new Metadata(txContext, headerRef);
+    BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+    while (node instanceof InternalNode<K, V> internal) {
+      node = BTreeNode.load(txContext, internal.getChild(internal.getKeyCount()), keySerializer, valueSerializer);
+    }
+    return (LeafNode<K, V>) node;
+  }
+
+  public Iterator<Map.Entry<K, V>> entryIterator(
+      final K fromKey, final boolean fromInclusive,
+      final K toKey, final boolean toInclusive,
+      final boolean descending) {
+
+    class StartState {
+      LeafNode<K, V> leaf;
+      int index;
+    }
+
+    final StartState start = txManager.execute(
+        txContext -> {
+          StartState s = new StartState();
+          if (fromKey == null) {
+            if (!descending) {
+              s.leaf = getFirstLeaf(txContext);
+              s.index = 0;
+            } else {
+              s.leaf = getLastLeaf(txContext);
+              s.index = s.leaf.getKeyCount() - 1;
+            }
+          } else {
+            Metadata metadata = new Metadata(txContext, headerRef);
+            BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+            while (node instanceof InternalNode<K, V> internal) {
+              int i = Collections.binarySearch(internal.keys, fromKey, comparator);
+              if (i < 0) {
+                i = -i - 1;
+              } else {
+                i++;
+              }
+              node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
+            }
+            s.leaf = (LeafNode<K, V>) node;
+            int i = Collections.binarySearch(s.leaf.keys, fromKey, comparator);
+            if (!descending) {
+              if (i >= 0) {
+                s.index = fromInclusive ? i : i + 1;
+              } else {
+                s.index = -i - 1;
+              }
+              if (s.index >= s.leaf.getKeyCount() && s.leaf.getNext() != null) {
+                s.leaf = (LeafNode<K, V>) BTreeNode.load(txContext, s.leaf.getNext(), keySerializer, valueSerializer);
+                s.index = 0;
+              }
+            } else {
+              if (i >= 0) {
+                s.index = fromInclusive ? i : i - 1;
+              } else {
+                s.index = -i - 2;
+              }
+              if (s.index < 0 && s.leaf.getPrev() != null) {
+                s.leaf = (LeafNode<K, V>) BTreeNode.load(txContext, s.leaf.getPrev(), keySerializer, valueSerializer);
+                s.index = s.leaf.getKeyCount() - 1;
+              }
+            }
+          }
+          return s;
+        });
+
+    return new Iterator<>() {
+      private LeafNode<K, V> currentLeaf = start.leaf;
+      private int currentIndex = start.index;
+      private Map.Entry<K, V> nextEntry = null;
+
+      {
+        prefetch();
+      }
+
+      private void prefetch() {
+        if (currentLeaf == null || currentIndex < 0 || currentIndex >= currentLeaf.getKeyCount()) {
+          nextEntry = null;
+          return;
+        }
+
+        K key = currentLeaf.getKey(currentIndex);
+        if (toKey != null) {
+          int cmp = comparator.compare(key, toKey);
+          if (!descending) {
+            if (toInclusive ? cmp > 0 : cmp >= 0) {
+              nextEntry = null;
+              return;
+            }
+          } else {
+            if (toInclusive ? cmp < 0 : cmp <= 0) {
+              nextEntry = null;
+              return;
+            }
+          }
+        }
+
+        V val = currentLeaf.getValue(currentIndex);
+        nextEntry = new AbstractMap.SimpleImmutableEntry<>(key, val);
+
+        if (!descending) {
+          if (currentIndex + 1 < currentLeaf.getKeyCount()) {
+            currentIndex++;
+          } else {
+            if (currentLeaf.getNext() != null) {
+              currentLeaf = txManager.execute(
+                  txContext -> (LeafNode<K, V>) BTreeNode.load(txContext, currentLeaf.getNext(), keySerializer, valueSerializer)
+              );
+              currentIndex = 0;
+            } else {
+              currentLeaf = null;
+              currentIndex = -1;
+            }
+          }
+        } else {
+          if (currentIndex - 1 >= 0) {
+            currentIndex--;
+          } else {
+            if (currentLeaf.getPrev() != null) {
+              currentLeaf = txManager.execute(
+                  txContext -> (LeafNode<K, V>) BTreeNode.load(txContext, currentLeaf.getPrev(), keySerializer, valueSerializer)
+              );
+              currentIndex = currentLeaf.getKeyCount() - 1;
+            } else {
+              currentLeaf = null;
+              currentIndex = -1;
+            }
+          }
+        }
+      }
+
+      @Override
+      public boolean hasNext() {
+        return nextEntry != null;
+      }
+
+      @Override
+      public Map.Entry<K, V> next() {
+        if (nextEntry == null) {
+          throw new NoSuchElementException();
+        }
+        Map.Entry<K, V> ret = nextEntry;
+        prefetch();
+        return ret;
+      }
+    };
+  }
+
+  public Iterator<K> keyIterator(
+      final K fromKey, final boolean fromInclusive,
+      final K toKey, final boolean toInclusive,
+      final boolean descending) {
+    final Iterator<Map.Entry<K, V>> entryIt = entryIterator(fromKey, fromInclusive, toKey, toInclusive, descending);
+    return new Iterator<>() {
+      @Override
+      public boolean hasNext() {
+        return entryIt.hasNext();
+      }
+
+      @Override
+      public K next() {
+        return entryIt.next().getKey();
+      }
+    };
   }
 }

@@ -401,4 +401,146 @@ class BTreeTest extends AbstractTransactionTest {
           return null;
         });
   }
+
+  @Test
+  void closestMatchLookups() {
+    TransactionManager txManager = createTransactionContext();
+    ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
+    
+    // 1. Test on empty tree
+    btree.initialize();
+    assertNull(btree.floorEntry("key"));
+    assertNull(btree.floorKey("key"));
+    assertNull(btree.ceilingEntry("key"));
+    assertNull(btree.ceilingKey("key"));
+    assertNull(btree.lowerEntry("key"));
+    assertNull(btree.lowerKey("key"));
+    assertNull(btree.higherEntry("key"));
+    assertNull(btree.higherKey("key"));
+
+    // Populate the B-Tree with key10, key20, key30
+    btree.insert("key10", "value10".getBytes());
+    btree.insert("key20", "value20".getBytes());
+    btree.insert("key30", "value30".getBytes());
+
+    // 2. Test floor
+    // exact match
+    assertEquals("key20", btree.floorKey("key20"));
+    assertArrayEquals("value20".getBytes(), btree.floorEntry("key20").getValue());
+    // non-exact match (between two keys)
+    assertEquals("key20", btree.floorKey("key25"));
+    assertArrayEquals("value20".getBytes(), btree.floorEntry("key25").getValue());
+    // smaller than all keys
+    assertNull(btree.floorKey("key05"));
+    assertNull(btree.floorEntry("key05"));
+    // larger than all keys
+    assertEquals("key30", btree.floorKey("key35"));
+    assertArrayEquals("value30".getBytes(), btree.floorEntry("key35").getValue());
+
+    // 3. Test ceiling
+    // exact match
+    assertEquals("key20", btree.ceilingKey("key20"));
+    assertArrayEquals("value20".getBytes(), btree.ceilingEntry("key20").getValue());
+    // non-exact match (between two keys)
+    assertEquals("key20", btree.ceilingKey("key15"));
+    assertArrayEquals("value20".getBytes(), btree.ceilingEntry("key15").getValue());
+    // smaller than all keys
+    assertEquals("key10", btree.ceilingKey("key05"));
+    assertArrayEquals("value10".getBytes(), btree.ceilingEntry("key05").getValue());
+    // larger than all keys
+    assertNull(btree.ceilingKey("key35"));
+    assertNull(btree.ceilingEntry("key35"));
+
+    // 4. Test lower (strictly less than)
+    // exact match
+    assertEquals("key10", btree.lowerKey("key20"));
+    assertArrayEquals("value10".getBytes(), btree.lowerEntry("key20").getValue());
+    // non-exact match
+    assertEquals("key20", btree.lowerKey("key25"));
+    assertArrayEquals("value20".getBytes(), btree.lowerEntry("key25").getValue());
+    // smaller than or equal to first key
+    assertNull(btree.lowerKey("key10"));
+    assertNull(btree.lowerEntry("key10"));
+    assertNull(btree.lowerKey("key05"));
+
+    // 5. Test higher (strictly greater than)
+    // exact match
+    assertEquals("key30", btree.higherKey("key20"));
+    assertArrayEquals("value30".getBytes(), btree.higherEntry("key20").getValue());
+    // non-exact match
+    assertEquals("key20", btree.higherKey("key15"));
+    assertArrayEquals("value20".getBytes(), btree.higherEntry("key15").getValue());
+    // larger than or equal to last key
+    assertNull(btree.higherKey("key30"));
+    assertNull(btree.higherEntry("key30"));
+    assertNull(btree.higherKey("key35"));
+  }
+
+  @Test
+  void rangeBoundedIterators() {
+    TransactionManager txManager = createTransactionContext();
+    ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
+    
+    // 1. Test empty tree iterator
+    btree.initialize();
+    java.util.Iterator<String> it = btree.keyIterator(null, true, null, true, false);
+    assertFalse(it.hasNext());
+
+    // Populate the B-Tree with key00, key01, ..., key19
+    for (int i = 0; i < 20; i++) {
+      btree.insert(String.format("key%02d", i), ("value" + i).getBytes());
+    }
+
+    // 2. Full range forward iterator
+    java.util.List<String> list = new java.util.ArrayList<>();
+    btree.keyIterator(null, true, null, true, false).forEachRemaining(list::add);
+    assertEquals(20, list.size());
+    assertEquals("key00", list.get(0));
+    assertEquals("key19", list.get(19));
+
+    // 3. Full range backward (descending) iterator
+    list.clear();
+    btree.keyIterator(null, true, null, true, true).forEachRemaining(list::add);
+    assertEquals(20, list.size());
+    assertEquals("key19", list.get(0));
+    assertEquals("key00", list.get(19));
+
+    // 4. Bounded range forward: key05 (inclusive) to key15 (exclusive)
+    list.clear();
+    btree.keyIterator("key05", true, "key15", false, false).forEachRemaining(list::add);
+    assertEquals(10, list.size());
+    assertEquals("key05", list.get(0));
+    assertEquals("key14", list.get(9));
+
+    // 5. Bounded range forward: key05 (exclusive) to key15 (inclusive)
+    list.clear();
+    btree.keyIterator("key05", false, "key15", true, false).forEachRemaining(list::add);
+    assertEquals(10, list.size());
+    assertEquals("key06", list.get(0));
+    assertEquals("key15", list.get(9));
+
+    // 6. Bounded range backward (descending): key15 (inclusive) to key05 (exclusive)
+    list.clear();
+    btree.keyIterator("key15", true, "key05", false, true).forEachRemaining(list::add);
+    assertEquals(10, list.size());
+    assertEquals("key15", list.get(0));
+    assertEquals("key06", list.get(9));
+
+    // 7. Bounded range backward (descending): key15 (exclusive) to key05 (inclusive)
+    list.clear();
+    btree.keyIterator("key15", false, "key05", true, true).forEachRemaining(list::add);
+    assertEquals(10, list.size());
+    assertEquals("key14", list.get(0));
+    assertEquals("key05", list.get(9));
+    
+    // 8. Bounded range when bounds do not exist: key05a (inclusive) to key15a (inclusive)
+    list.clear();
+    btree.keyIterator("key05a", true, "key15a", true, false).forEachRemaining(list::add);
+    // Elements should be key06 to key15
+    assertEquals(10, list.size());
+    assertEquals("key06", list.get(0));
+    assertEquals("key15", list.get(9));
+  }
 }
