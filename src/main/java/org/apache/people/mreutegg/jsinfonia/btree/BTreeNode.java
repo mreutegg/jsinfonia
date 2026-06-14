@@ -21,18 +21,26 @@ import java.util.List;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
-public abstract class BTreeNode {
+public abstract class BTreeNode<K, V> {
 
   public static final byte TYPE_INTERNAL = 0;
   public static final byte TYPE_LEAF = 1;
 
   protected final TransactionContext txContext;
   protected final ItemReference ref;
-  protected final List<String> keys = new ArrayList<>();
+  protected final Serializer<K> keySerializer;
+  protected final Serializer<V> valueSerializer;
+  protected final List<K> keys = new ArrayList<>();
 
-  protected BTreeNode(TransactionContext txContext, ItemReference ref) {
+  protected BTreeNode(
+      TransactionContext txContext,
+      ItemReference ref,
+      Serializer<K> keySerializer,
+      Serializer<V> valueSerializer) {
     this.txContext = txContext;
     this.ref = ref;
+    this.keySerializer = keySerializer;
+    this.valueSerializer = valueSerializer;
   }
 
   public ItemReference getReference() {
@@ -43,7 +51,7 @@ public abstract class BTreeNode {
     return keys.size();
   }
 
-  public String getKey(int index) {
+  public K getKey(int index) {
     return keys.get(index);
   }
 
@@ -51,17 +59,21 @@ public abstract class BTreeNode {
 
   public abstract void load();
 
-  public static BTreeNode load(final TransactionContext txContext, final ItemReference ref) {
+  public static <K, V> BTreeNode<K, V> load(
+      final TransactionContext txContext,
+      final ItemReference ref,
+      final Serializer<K> keySerializer,
+      final Serializer<V> valueSerializer) {
     return txContext.read(
         ref,
         data -> {
           byte type = data.get();
           data.rewind();
-          BTreeNode node;
+          BTreeNode<K, V> node;
           if (type == TYPE_INTERNAL) {
-            node = new InternalNode(txContext, ref);
+            node = new InternalNode<>(txContext, ref, keySerializer, valueSerializer);
           } else if (type == TYPE_LEAF) {
-            node = new LeafNode(txContext, ref);
+            node = new LeafNode<>(txContext, ref, keySerializer, valueSerializer);
           } else {
             throw new IllegalStateException("Unknown node type: " + type);
           }
@@ -70,36 +82,20 @@ public abstract class BTreeNode {
         });
   }
 
-  protected void writeString(ByteBuffer buffer, String s) {
-    byte[] bytes = s.getBytes();
-    buffer.putInt(bytes.length);
-    buffer.put(bytes);
+  protected void writeKey(ByteBuffer buffer, K key) {
+    keySerializer.serialize(buffer, key);
   }
 
-  protected String readString(ByteBuffer buffer) {
-    int length = buffer.getInt();
-    byte[] bytes = new byte[length];
-    buffer.get(bytes);
-    return new String(bytes);
+  protected K readKey(ByteBuffer buffer) {
+    return keySerializer.deserialize(buffer);
   }
 
-  protected void writeBytes(ByteBuffer buffer, byte[] bytes) {
-    if (bytes == null) {
-      buffer.putInt(-1);
-    } else {
-      buffer.putInt(bytes.length);
-      buffer.put(bytes);
-    }
+  protected void writeValue(ByteBuffer buffer, V value) {
+    valueSerializer.serialize(buffer, value);
   }
 
-  protected byte[] readBytes(ByteBuffer buffer) {
-    int length = buffer.getInt();
-    if (length == -1) {
-      return null;
-    }
-    byte[] bytes = new byte[length];
-    buffer.get(bytes);
-    return bytes;
+  protected V readValue(ByteBuffer buffer) {
+    return valueSerializer.deserialize(buffer);
   }
 
   protected void writeItemReference(ByteBuffer buffer, ItemReference ref) {

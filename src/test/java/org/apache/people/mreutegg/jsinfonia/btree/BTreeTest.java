@@ -58,7 +58,7 @@ class BTreeTest extends AbstractTransactionTest {
   void insertAndLookup() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef);
     btree.initialize();
 
     btree.insert("key1", "value1".getBytes());
@@ -74,7 +74,7 @@ class BTreeTest extends AbstractTransactionTest {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
     // Small maxKeys to trigger split early
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     for (int i = 0; i < 20; i++) {
@@ -93,7 +93,7 @@ class BTreeTest extends AbstractTransactionTest {
   void update() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef);
     btree.initialize();
 
     btree.insert("key1", "value1".getBytes());
@@ -107,7 +107,7 @@ class BTreeTest extends AbstractTransactionTest {
   void delete() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef);
     btree.initialize();
 
     btree.insert("key1", "value1".getBytes());
@@ -121,7 +121,7 @@ class BTreeTest extends AbstractTransactionTest {
   void deletePredecessorReplace() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     btree.insert("key2", "value2".getBytes());
@@ -145,7 +145,7 @@ class BTreeTest extends AbstractTransactionTest {
   void deleteBorrowFromLeftSibling() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     btree.insert("key2", "value2".getBytes());
@@ -172,7 +172,7 @@ class BTreeTest extends AbstractTransactionTest {
   void deleteBorrowFromRightSibling() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     btree.insert("key2", "value2".getBytes());
@@ -199,7 +199,7 @@ class BTreeTest extends AbstractTransactionTest {
   void deleteMergeLeafNodesAndHeightShrink() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     btree.insert("key2", "value2".getBytes());
@@ -226,7 +226,7 @@ class BTreeTest extends AbstractTransactionTest {
   void deleteRandomStressTest() {
     TransactionManager txManager = createTransactionContext();
     ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
-    BTree btree = new BTree(txManager, factory, btreeMetadataRef, 4);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
     btree.initialize();
 
     // Insert 100 entries

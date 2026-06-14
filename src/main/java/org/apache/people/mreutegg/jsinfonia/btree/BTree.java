@@ -16,17 +16,21 @@
 package org.apache.people.mreutegg.jsinfonia.btree;
 
 import java.util.Collections;
+import java.util.Comparator;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionManager;
 import org.apache.people.mreutegg.jsinfonia.util.ItemManager;
 import org.apache.people.mreutegg.jsinfonia.util.ItemManagerFactory;
 
-public class BTree {
+public class BTree<K, V> {
 
   private final TransactionManager txManager;
   private final ItemManagerFactory factory;
   private final ItemReference headerRef;
+  private final Serializer<K> keySerializer;
+  private final Serializer<V> valueSerializer;
+  private final Comparator<? super K> comparator;
   private final int maxKeys;
 
   /**
@@ -36,8 +40,13 @@ public class BTree {
    * @param factory the factory to create item managers for node allocation and removal
    * @param headerRef the item reference pointing to the B-Tree metadata header
    */
+  @SuppressWarnings("unchecked")
   public BTree(TransactionManager txManager, ItemManagerFactory factory, ItemReference headerRef) {
-    this(txManager, factory, headerRef, 10); // Default max keys
+    this(txManager, factory, headerRef,
+        (Serializer<K>) StringSerializer.INSTANCE,
+        (Serializer<V>) ByteArraySerializer.INSTANCE,
+        (Comparator<? super K>) Comparator.naturalOrder(),
+        10); // Default max keys
   }
 
   /**
@@ -48,14 +57,49 @@ public class BTree {
    * @param headerRef the item reference pointing to the B-Tree metadata header
    * @param maxKeys the maximum number of keys a node can hold before splitting
    */
+  @SuppressWarnings("unchecked")
   public BTree(
       TransactionManager txManager,
       ItemManagerFactory factory,
       ItemReference headerRef,
       int maxKeys) {
+    this(txManager, factory, headerRef,
+        (Serializer<K>) StringSerializer.INSTANCE,
+        (Serializer<V>) ByteArraySerializer.INSTANCE,
+        (Comparator<? super K>) Comparator.naturalOrder(),
+        maxKeys);
+  }
+
+  /**
+   * Constructs a BTree instance with custom serializers, comparator, and default max keys.
+   */
+  public BTree(
+      TransactionManager txManager,
+      ItemManagerFactory factory,
+      ItemReference headerRef,
+      Serializer<K> keySerializer,
+      Serializer<V> valueSerializer,
+      Comparator<? super K> comparator) {
+    this(txManager, factory, headerRef, keySerializer, valueSerializer, comparator, 10);
+  }
+
+  /**
+   * Constructs a BTree instance with custom serializers, comparator, and specified max keys.
+   */
+  public BTree(
+      TransactionManager txManager,
+      ItemManagerFactory factory,
+      ItemReference headerRef,
+      Serializer<K> keySerializer,
+      Serializer<V> valueSerializer,
+      Comparator<? super K> comparator,
+      int maxKeys) {
     this.txManager = txManager;
     this.factory = factory;
     this.headerRef = headerRef;
+    this.keySerializer = keySerializer;
+    this.valueSerializer = valueSerializer;
+    this.comparator = comparator;
     this.maxKeys = maxKeys;
   }
 
@@ -68,7 +112,7 @@ public class BTree {
         txContext -> {
           ItemManager itemMgr = factory.createItemManager(txContext);
           ItemReference rootRef = itemMgr.alloc();
-          LeafNode root = new LeafNode(txContext, rootRef);
+          LeafNode<K, V> root = new LeafNode<>(txContext, rootRef, keySerializer, valueSerializer);
           root.save();
           Metadata metadata = new Metadata(txContext, headerRef);
           metadata.initialize(rootRef);
@@ -80,24 +124,24 @@ public class BTree {
    * Looks up the value associated with the specified key in the B-Tree.
    *
    * @param key the key whose associated value is to be returned
-   * @return the byte array value associated with the key, or {@code null} if the key is not found
+   * @return the value associated with the key, or {@code null} if the key is not found
    */
-  public byte[] lookup(final String key) {
+  public V lookup(final K key) {
     return txManager.execute(
         txContext -> {
           Metadata metadata = new Metadata(txContext, headerRef);
-          BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
-          while (node instanceof InternalNode internal) {
-            int i = Collections.binarySearch(internal.keys, key);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
             if (i < 0) {
               i = -i - 1;
             } else {
               i++;
             }
-            node = BTreeNode.load(txContext, internal.getChild(i));
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
           }
-          LeafNode leaf = (LeafNode) node;
-          int i = Collections.binarySearch(leaf.keys, key);
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
           if (i >= 0) {
             return leaf.getValue(i);
           }
@@ -109,25 +153,25 @@ public class BTree {
    * Updates the value associated with the specified key in the B-Tree if the key already exists.
    *
    * @param key the key whose associated value is to be updated
-   * @param value the new byte array value to associate with the key
+   * @param value the new value to associate with the key
    * @return {@code true} if the key was found and successfully updated, or {@code false} otherwise
    */
-  public boolean update(final String key, final byte[] value) {
+  public boolean update(final K key, final V value) {
     return txManager.execute(
         txContext -> {
           Metadata metadata = new Metadata(txContext, headerRef);
-          BTreeNode node = BTreeNode.load(txContext, metadata.getRootNodeRef());
-          while (node instanceof InternalNode internal) {
-            int i = Collections.binarySearch(internal.keys, key);
+          BTreeNode<K, V> node = BTreeNode.load(txContext, metadata.getRootNodeRef(), keySerializer, valueSerializer);
+          while (node instanceof InternalNode<K, V> internal) {
+            int i = Collections.binarySearch(internal.keys, key, comparator);
             if (i < 0) {
               i = -i - 1;
             } else {
               i++;
             }
-            node = BTreeNode.load(txContext, internal.getChild(i));
+            node = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
           }
-          LeafNode leaf = (LeafNode) node;
-          int i = Collections.binarySearch(leaf.keys, key);
+          LeafNode<K, V> leaf = (LeafNode<K, V>) node;
+          int i = Collections.binarySearch(leaf.keys, key, comparator);
           if (i >= 0) {
             leaf.updateValue(i, value);
             leaf.save();
@@ -142,18 +186,18 @@ public class BTree {
    * value is updated with the new value.
    *
    * @param key the key to insert or update
-   * @param value the byte array value to associate with the key
+   * @param value the value to associate with the key
    */
-  public void insert(final String key, final byte[] value) {
+  public void insert(final K key, final V value) {
     txManager.execute(
         txContext -> {
           Metadata metadata = new Metadata(txContext, headerRef);
           ItemReference rootRef = metadata.getRootNodeRef();
-          BTreeNode root = BTreeNode.load(txContext, rootRef);
+          BTreeNode<K, V> root = BTreeNode.load(txContext, rootRef, keySerializer, valueSerializer);
           if (root.getKeyCount() == maxKeys) {
             ItemManager itemMgr = factory.createItemManager(txContext);
             ItemReference newRootRef = itemMgr.alloc();
-            InternalNode newRoot = new InternalNode(txContext, newRootRef);
+            InternalNode<K, V> newRoot = new InternalNode<>(txContext, newRootRef, keySerializer, valueSerializer);
             newRoot.addChild(0, rootRef);
             splitChild(txContext, itemMgr, newRoot, 0, root);
             metadata.setRootNodeRef(newRootRef);
@@ -173,12 +217,12 @@ public class BTree {
    * @param key the key to be deleted
    * @return {@code true} if the key was found and successfully deleted, or {@code false} otherwise
    */
-  public boolean delete(final String key) {
+  public boolean delete(final K key) {
     return txManager.execute(
         txContext -> {
           Metadata metadata = new Metadata(txContext, headerRef);
           ItemReference rootRef = metadata.getRootNodeRef();
-          BTreeNode root = BTreeNode.load(txContext, rootRef);
+          BTreeNode<K, V> root = BTreeNode.load(txContext, rootRef, keySerializer, valueSerializer);
           ItemManager itemMgr = factory.createItemManager(txContext);
           return delete(txContext, itemMgr, root, key, metadata, rootRef);
         });
@@ -187,9 +231,9 @@ public class BTree {
   // ---------------------------------< internal >----------------------------
 
   private void insertNonFull(
-      TransactionContext txContext, ItemManager itemMgr, BTreeNode node, String key, byte[] value) {
-    if (node instanceof LeafNode leaf) {
-      int i = Collections.binarySearch(leaf.keys, key);
+      TransactionContext txContext, ItemManager itemMgr, BTreeNode<K, V> node, K key, V value) {
+    if (node instanceof LeafNode<K, V> leaf) {
+      int i = Collections.binarySearch(leaf.keys, key, comparator);
       if (i >= 0) {
         leaf.updateValue(i, value);
       } else {
@@ -197,20 +241,20 @@ public class BTree {
       }
       leaf.save();
     } else {
-      InternalNode internal = (InternalNode) node;
-      int i = Collections.binarySearch(internal.keys, key);
+      InternalNode<K, V> internal = (InternalNode<K, V>) node;
+      int i = Collections.binarySearch(internal.keys, key, comparator);
       if (i < 0) {
         i = -i - 1;
       } else {
         i++;
       }
-      BTreeNode child = BTreeNode.load(txContext, internal.getChild(i));
+      BTreeNode<K, V> child = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
       if (child.getKeyCount() == maxKeys) {
         splitChild(txContext, itemMgr, internal, i, child);
-        if (key.compareTo(internal.getKey(i)) > 0) {
+        if (comparator.compare(key, internal.getKey(i)) > 0) {
           i++;
         }
-        child = BTreeNode.load(txContext, internal.getChild(i));
+        child = BTreeNode.load(txContext, internal.getChild(i), keySerializer, valueSerializer);
       }
       insertNonFull(txContext, itemMgr, child, key, value);
     }
@@ -219,23 +263,23 @@ public class BTree {
   private void splitChild(
       TransactionContext txContext,
       ItemManager itemMgr,
-      InternalNode parent,
+      InternalNode<K, V> parent,
       int index,
-      BTreeNode child) {
+      BTreeNode<K, V> child) {
     int mid = maxKeys / 2;
-    String midKey = child.getKey(mid);
+    K midKey = child.getKey(mid);
     ItemReference nextRef = itemMgr.alloc();
-    BTreeNode next;
-    if (child instanceof LeafNode leaf) {
-      LeafNode nextLeaf = new LeafNode(txContext, nextRef);
+    BTreeNode<K, V> next;
+    if (child instanceof LeafNode<K, V> leaf) {
+      LeafNode<K, V> nextLeaf = new LeafNode<>(txContext, nextRef, keySerializer, valueSerializer);
       for (int i = mid; i < maxKeys; i++) {
         nextLeaf.addEntry(nextLeaf.getKeyCount(), leaf.getKey(mid), leaf.getValue(mid));
         leaf.removeEntry(mid);
       }
       next = nextLeaf;
     } else {
-      InternalNode internal = (InternalNode) child;
-      InternalNode nextInternal = new InternalNode(txContext, nextRef);
+      InternalNode<K, V> internal = (InternalNode<K, V>) child;
+      InternalNode<K, V> nextInternal = new InternalNode<>(txContext, nextRef, keySerializer, valueSerializer);
       nextInternal.addChild(0, internal.removeChild(mid + 1));
       for (int i = mid + 1; i < maxKeys; i++) {
         nextInternal.addKey(nextInternal.getKeyCount(), internal.removeKey(mid + 1));
@@ -254,16 +298,16 @@ public class BTree {
   private boolean delete(
       TransactionContext txContext,
       ItemManager itemMgr,
-      BTreeNode node,
-      String key,
+      BTreeNode<K, V> node,
+      K key,
       Metadata metadata,
       ItemReference nodeRef) {
 
     int minKeys = (maxKeys - 1) / 2;
     boolean isRoot = nodeRef.equals(metadata.getRootNodeRef());
 
-    if (node instanceof LeafNode leaf) {
-      int i = Collections.binarySearch(leaf.keys, key);
+    if (node instanceof LeafNode<K, V> leaf) {
+      int i = Collections.binarySearch(leaf.keys, key, comparator);
       if (i >= 0) {
         leaf.removeEntry(i);
         leaf.save();
@@ -273,8 +317,8 @@ public class BTree {
     }
 
     // node is an InternalNode
-    InternalNode internal = (InternalNode) node;
-    int idx = Collections.binarySearch(internal.keys, key);
+    InternalNode<K, V> internal = (InternalNode<K, V>) node;
+    int idx = Collections.binarySearch(internal.keys, key, comparator);
     if (idx < 0) {
       idx = -idx - 1;
     } else {
@@ -282,7 +326,7 @@ public class BTree {
     }
 
     ItemReference childRef = internal.getChild(idx);
-    BTreeNode child = BTreeNode.load(txContext, childRef);
+    BTreeNode<K, V> child = BTreeNode.load(txContext, childRef, keySerializer, valueSerializer);
 
     if (child.getKeyCount() >= minKeys + 1) {
       return delete(txContext, itemMgr, child, key, metadata, childRef);
@@ -291,7 +335,7 @@ public class BTree {
     // child has only minKeys keys. We must fill or merge.
     if (idx > 0) {
       ItemReference leftRef = internal.getChild(idx - 1);
-      BTreeNode left = BTreeNode.load(txContext, leftRef);
+      BTreeNode<K, V> left = BTreeNode.load(txContext, leftRef, keySerializer, valueSerializer);
       if (left.getKeyCount() >= minKeys + 1) {
         borrowFromLeft(txContext, internal, idx, child, left);
         return delete(txContext, itemMgr, child, key, metadata, childRef);
@@ -300,7 +344,7 @@ public class BTree {
 
     if (idx < internal.getKeyCount()) {
       ItemReference rightRef = internal.getChild(idx + 1);
-      BTreeNode right = BTreeNode.load(txContext, rightRef);
+      BTreeNode<K, V> right = BTreeNode.load(txContext, rightRef, keySerializer, valueSerializer);
       if (right.getKeyCount() >= minKeys + 1) {
         borrowFromRight(txContext, internal, idx, child, right);
         return delete(txContext, itemMgr, child, key, metadata, childRef);
@@ -310,7 +354,7 @@ public class BTree {
     // Both left and right siblings have only minKeys keys. We must merge.
     if (idx > 0) {
       ItemReference leftRef = internal.getChild(idx - 1);
-      BTreeNode left = BTreeNode.load(txContext, leftRef);
+      BTreeNode<K, V> left = BTreeNode.load(txContext, leftRef, keySerializer, valueSerializer);
       merge(txContext, itemMgr, internal, idx - 1, left, child);
 
       if (isRoot && internal.getKeyCount() == 0) {
@@ -321,7 +365,7 @@ public class BTree {
       return delete(txContext, itemMgr, left, key, metadata, leftRef);
     } else {
       ItemReference rightRef = internal.getChild(idx + 1);
-      BTreeNode right = BTreeNode.load(txContext, rightRef);
+      BTreeNode<K, V> right = BTreeNode.load(txContext, rightRef, keySerializer, valueSerializer);
       merge(txContext, itemMgr, internal, idx, child, right);
 
       if (isRoot && internal.getKeyCount() == 0) {
@@ -336,25 +380,24 @@ public class BTree {
   private void merge(
       TransactionContext txContext,
       ItemManager itemMgr,
-      InternalNode parent,
+      InternalNode<K, V> parent,
       int index,
-      BTreeNode y,
-      BTreeNode z) {
+      BTreeNode<K, V> y,
+      BTreeNode<K, V> z) {
 
-    String separatingKey = parent.removeKey(index);
+    K separatingKey = parent.removeKey(index);
     parent.removeChild(index + 1);
     parent.save();
 
-    if (y instanceof LeafNode) {
-      LeafNode yLeaf = (LeafNode) y;
-      LeafNode zLeaf = (LeafNode) z;
+    if (y instanceof LeafNode<K, V> yLeaf) {
+      LeafNode<K, V> zLeaf = (LeafNode<K, V>) z;
       for (int i = 0; i < zLeaf.getKeyCount(); i++) {
         yLeaf.addEntry(yLeaf.getKeyCount(), zLeaf.getKey(i), zLeaf.getValue(i));
       }
       yLeaf.save();
     } else {
-      InternalNode yInternal = (InternalNode) y;
-      InternalNode zInternal = (InternalNode) z;
+      InternalNode<K, V> yInternal = (InternalNode<K, V>) y;
+      InternalNode<K, V> zInternal = (InternalNode<K, V>) z;
       yInternal.addKey(yInternal.getKeyCount(), separatingKey);
       yInternal.addChild(yInternal.getKeyCount(), zInternal.getChild(0));
       for (int i = 0; i < zInternal.getKeyCount(); i++) {
@@ -369,18 +412,17 @@ public class BTree {
 
   private void borrowFromLeft(
       TransactionContext txContext,
-      InternalNode parent,
+      InternalNode<K, V> parent,
       int index,
-      BTreeNode child,
-      BTreeNode left) {
+      BTreeNode<K, V> child,
+      BTreeNode<K, V> left) {
 
-    if (child instanceof LeafNode) {
-      LeafNode childLeaf = (LeafNode) child;
-      LeafNode leftLeaf = (LeafNode) left;
+    if (child instanceof LeafNode<K, V> childLeaf) {
+      LeafNode<K, V> leftLeaf = (LeafNode<K, V>) left;
 
       int lastIdx = leftLeaf.getKeyCount() - 1;
-      String keyToBorrow = leftLeaf.getKey(lastIdx);
-      byte[] valToBorrow = leftLeaf.getValue(lastIdx);
+      K keyToBorrow = leftLeaf.getKey(lastIdx);
+      V valToBorrow = leftLeaf.getValue(lastIdx);
 
       leftLeaf.removeEntry(lastIdx);
       leftLeaf.save();
@@ -391,12 +433,12 @@ public class BTree {
       parent.keys.set(index - 1, keyToBorrow);
       parent.save();
     } else {
-      InternalNode childInt = (InternalNode) child;
-      InternalNode leftInt = (InternalNode) left;
+      InternalNode<K, V> childInt = (InternalNode<K, V>) child;
+      InternalNode<K, V> leftInt = (InternalNode<K, V>) left;
 
-      String parentKey = parent.getKey(index - 1);
+      K parentKey = parent.getKey(index - 1);
       int lastKeyIdx = leftInt.getKeyCount() - 1;
-      String leftKey = leftInt.removeKey(lastKeyIdx);
+      K leftKey = leftInt.removeKey(lastKeyIdx);
       ItemReference leftChild = leftInt.removeChild(lastKeyIdx + 1);
       leftInt.save();
 
@@ -411,17 +453,16 @@ public class BTree {
 
   private void borrowFromRight(
       TransactionContext txContext,
-      InternalNode parent,
+      InternalNode<K, V> parent,
       int index,
-      BTreeNode child,
-      BTreeNode right) {
+      BTreeNode<K, V> child,
+      BTreeNode<K, V> right) {
 
-    if (child instanceof LeafNode) {
-      LeafNode childLeaf = (LeafNode) child;
-      LeafNode rightLeaf = (LeafNode) right;
+    if (child instanceof LeafNode<K, V> childLeaf) {
+      LeafNode<K, V> rightLeaf = (LeafNode<K, V>) right;
 
-      String keyToBorrow = rightLeaf.getKey(0);
-      byte[] valToBorrow = rightLeaf.getValue(0);
+      K keyToBorrow = rightLeaf.getKey(0);
+      V valToBorrow = rightLeaf.getValue(0);
 
       rightLeaf.removeEntry(0);
       rightLeaf.save();
@@ -432,11 +473,11 @@ public class BTree {
       parent.keys.set(index, rightLeaf.getKey(0));
       parent.save();
     } else {
-      InternalNode childInt = (InternalNode) child;
-      InternalNode rightInt = (InternalNode) right;
+      InternalNode<K, V> childInt = (InternalNode<K, V>) child;
+      InternalNode<K, V> rightInt = (InternalNode<K, V>) right;
 
-      String parentKey = parent.getKey(index);
-      String rightKey = rightInt.removeKey(0);
+      K parentKey = parent.getKey(index);
+      K rightKey = rightInt.removeKey(0);
       ItemReference rightChild = rightInt.removeChild(0);
       rightInt.save();
 

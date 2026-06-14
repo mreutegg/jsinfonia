@@ -20,12 +20,16 @@ import java.util.List;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
-public class InternalNode extends BTreeNode {
+public class InternalNode<K, V> extends BTreeNode<K, V> {
 
   protected final List<ItemReference> children = new ArrayList<>();
 
-  public InternalNode(TransactionContext txContext, ItemReference ref) {
-    super(txContext, ref);
+  public InternalNode(
+      TransactionContext txContext,
+      ItemReference ref,
+      Serializer<K> keySerializer,
+      Serializer<V> valueSerializer) {
+    super(txContext, ref, keySerializer, valueSerializer);
   }
 
   public ItemReference getChild(int index) {
@@ -36,7 +40,7 @@ public class InternalNode extends BTreeNode {
     children.add(index, child);
   }
 
-  public void addKey(int index, String key) {
+  public void addKey(int index, K key) {
     keys.add(index, key);
   }
 
@@ -44,7 +48,7 @@ public class InternalNode extends BTreeNode {
     return children.remove(index);
   }
 
-  public String removeKey(int index) {
+  public K removeKey(int index) {
     return keys.remove(index);
   }
 
@@ -55,8 +59,8 @@ public class InternalNode extends BTreeNode {
         data -> {
           data.put(TYPE_INTERNAL);
           data.putInt(keys.size());
-          for (String key : keys) {
-            writeString(data, key);
+          for (K key : keys) {
+            writeKey(data, key);
           }
           for (ItemReference child : children) {
             writeItemReference(data, child);
@@ -77,7 +81,7 @@ public class InternalNode extends BTreeNode {
           int count = data.getInt();
           keys.clear();
           for (int i = 0; i < count; i++) {
-            keys.add(readString(data));
+            keys.add(readKey(data));
           }
           children.clear();
           for (int i = 0; i <= count; i++) {

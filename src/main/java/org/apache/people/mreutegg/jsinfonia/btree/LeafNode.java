@@ -20,19 +20,23 @@ import java.util.List;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 
-public class LeafNode extends BTreeNode {
+public class LeafNode<K, V> extends BTreeNode<K, V> {
 
-  protected final List<byte[]> values = new ArrayList<>();
+  protected final List<V> values = new ArrayList<>();
 
-  public LeafNode(TransactionContext txContext, ItemReference ref) {
-    super(txContext, ref);
+  public LeafNode(
+      TransactionContext txContext,
+      ItemReference ref,
+      Serializer<K> keySerializer,
+      Serializer<V> valueSerializer) {
+    super(txContext, ref, keySerializer, valueSerializer);
   }
 
-  public byte[] getValue(int index) {
+  public V getValue(int index) {
     return values.get(index);
   }
 
-  public void addEntry(int index, String key, byte[] value) {
+  public void addEntry(int index, K key, V value) {
     keys.add(index, key);
     values.add(index, value);
   }
@@ -42,7 +46,7 @@ public class LeafNode extends BTreeNode {
     values.remove(index);
   }
 
-  public void updateValue(int index, byte[] value) {
+  public void updateValue(int index, V value) {
     values.set(index, value);
   }
 
@@ -53,11 +57,11 @@ public class LeafNode extends BTreeNode {
         data -> {
           data.put(TYPE_LEAF);
           data.putInt(keys.size());
-          for (String key : keys) {
-            writeString(data, key);
+          for (K key : keys) {
+            writeKey(data, key);
           }
-          for (byte[] value : values) {
-            writeBytes(data, value);
+          for (V value : values) {
+            writeValue(data, value);
           }
           return null;
         });
@@ -75,11 +79,11 @@ public class LeafNode extends BTreeNode {
           int count = data.getInt();
           keys.clear();
           for (int i = 0; i < count; i++) {
-            keys.add(readString(data));
+            keys.add(readKey(data));
           }
           values.clear();
           for (int i = 0; i < count; i++) {
-            values.add(readBytes(data));
+            values.add(readValue(data));
           }
           return null;
         });
