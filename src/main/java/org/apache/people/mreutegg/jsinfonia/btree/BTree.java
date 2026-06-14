@@ -272,6 +272,15 @@ public class BTree<K, V> {
     BTreeNode<K, V> next;
     if (child instanceof LeafNode<K, V> leaf) {
       LeafNode<K, V> nextLeaf = new LeafNode<>(txContext, nextRef, keySerializer, valueSerializer);
+      nextLeaf.setNext(leaf.getNext());
+      nextLeaf.setPrev(leaf.getReference());
+      if (leaf.getNext() != null) {
+        LeafNode<K, V> rightSibling = (LeafNode<K, V>) BTreeNode.load(txContext, leaf.getNext(), keySerializer, valueSerializer);
+        rightSibling.setPrev(nextRef);
+        rightSibling.save();
+      }
+      leaf.setNext(nextRef);
+
       for (int i = mid; i < maxKeys; i++) {
         nextLeaf.addEntry(nextLeaf.getKeyCount(), leaf.getKey(mid), leaf.getValue(mid));
         leaf.removeEntry(mid);
@@ -391,6 +400,13 @@ public class BTree<K, V> {
 
     if (y instanceof LeafNode<K, V> yLeaf) {
       LeafNode<K, V> zLeaf = (LeafNode<K, V>) z;
+      yLeaf.setNext(zLeaf.getNext());
+      if (zLeaf.getNext() != null) {
+        LeafNode<K, V> rightSibling = (LeafNode<K, V>) BTreeNode.load(txContext, zLeaf.getNext(), keySerializer, valueSerializer);
+        rightSibling.setPrev(yLeaf.getReference());
+        rightSibling.save();
+      }
+
       for (int i = 0; i < zLeaf.getKeyCount(); i++) {
         yLeaf.addEntry(yLeaf.getKeyCount(), zLeaf.getKey(i), zLeaf.getValue(i));
       }

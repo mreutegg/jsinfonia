@@ -23,6 +23,8 @@ import org.apache.people.mreutegg.jsinfonia.data.TransactionContext;
 public class LeafNode<K, V> extends BTreeNode<K, V> {
 
   protected final List<V> values = new ArrayList<>();
+  private ItemReference next;
+  private ItemReference prev;
 
   public LeafNode(
       TransactionContext txContext,
@@ -30,6 +32,22 @@ public class LeafNode<K, V> extends BTreeNode<K, V> {
       Serializer<K> keySerializer,
       Serializer<V> valueSerializer) {
     super(txContext, ref, keySerializer, valueSerializer);
+  }
+
+  public ItemReference getNext() {
+    return next;
+  }
+
+  public void setNext(ItemReference next) {
+    this.next = next;
+  }
+
+  public ItemReference getPrev() {
+    return prev;
+  }
+
+  public void setPrev(ItemReference prev) {
+    this.prev = prev;
   }
 
   public V getValue(int index) {
@@ -57,6 +75,23 @@ public class LeafNode<K, V> extends BTreeNode<K, V> {
         data -> {
           data.put(TYPE_LEAF);
           data.putInt(keys.size());
+
+          // Write prev link
+          if (prev != null) {
+            data.put((byte) 1);
+            writeItemReference(data, prev);
+          } else {
+            data.put((byte) 0);
+          }
+
+          // Write next link
+          if (next != null) {
+            data.put((byte) 1);
+            writeItemReference(data, next);
+          } else {
+            data.put((byte) 0);
+          }
+
           for (K key : keys) {
             writeKey(data, key);
           }
@@ -77,6 +112,21 @@ public class LeafNode<K, V> extends BTreeNode<K, V> {
             throw new IllegalStateException("Not a leaf node");
           }
           int count = data.getInt();
+
+          // Read prev link
+          if (data.get() == 1) {
+            prev = readItemReference(data);
+          } else {
+            prev = null;
+          }
+
+          // Read next link
+          if (data.get() == 1) {
+            next = readItemReference(data);
+          } else {
+            next = null;
+          }
+
           keys.clear();
           for (int i = 0; i < count; i++) {
             keys.add(readKey(data));

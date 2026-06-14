@@ -16,11 +16,13 @@
 package org.apache.people.mreutegg.jsinfonia.btree;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import org.apache.people.mreutegg.jsinfonia.ItemReference;
 import org.apache.people.mreutegg.jsinfonia.MemoryNode;
 import org.apache.people.mreutegg.jsinfonia.MemoryNodeDirectory;
@@ -263,5 +265,140 @@ class BTreeTest extends AbstractTransactionTest {
     for (int i = 0; i < 100; i++) {
       assertNull(btree.lookup(String.format("k%03d", i)));
     }
+  }
+
+  @Test
+  void leafSiblingLinks() throws IOException {
+    TransactionManager txManager = createTransactionContext();
+    ItemManagerFactory factory = txContext -> new ItemManagerImpl(txContext, itemManagerRef);
+    BTree<String, byte[]> btree = new BTree<>(txManager, factory, btreeMetadataRef, 4);
+    btree.initialize();
+
+    // Insert 20 keys to trigger multiple splits and create a B+ Tree structure with several leaf nodes
+    for (int i = 0; i < 20; i++) {
+      btree.insert(String.format("key%02d", i), ("value" + i).getBytes());
+    }
+
+    // Now, run a transaction to traverse the leaves via next links
+    txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, btreeMetadataRef);
+          ItemReference currentRef = metadata.getRootNodeRef();
+          BTreeNode<String, byte[]> node = BTreeNode.load(txContext, currentRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          
+          // Traverse down to the first leaf node
+          while (node instanceof InternalNode<String, byte[]> internal) {
+            currentRef = internal.getChild(0);
+            node = BTreeNode.load(txContext, currentRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          }
+          
+          LeafNode<String, byte[]> firstLeaf = (LeafNode<String, byte[]>) node;
+          
+          // 1. Traverse forward using getNext()
+          java.util.List<String> forwardKeys = new java.util.ArrayList<>();
+          LeafNode<String, byte[]> curr = firstLeaf;
+          ItemReference lastRef = null;
+          while (curr != null) {
+            forwardKeys.addAll(curr.keys);
+            lastRef = curr.getReference();
+            if (curr.getNext() != null) {
+              curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, curr.getNext(), StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+            } else {
+              curr = null;
+            }
+          }
+          
+          // Verify we saw all 20 keys in order
+          assertEquals(20, forwardKeys.size());
+          for (int i = 0; i < 20; i++) {
+            assertEquals(String.format("key%02d", i), forwardKeys.get(i));
+          }
+          
+          // 2. Traverse backward using getPrev() starting from lastRef
+          java.util.List<String> backwardKeys = new java.util.ArrayList<>();
+          curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, lastRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          while (curr != null) {
+            // prepend keys in reverse order of leaf keys
+            for (int i = curr.getKeyCount() - 1; i >= 0; i--) {
+              backwardKeys.add(0, curr.getKey(i));
+            }
+            if (curr.getPrev() != null) {
+              curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, curr.getPrev(), StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+            } else {
+              curr = null;
+            }
+          }
+          
+          // Verify backward keys
+          assertEquals(20, backwardKeys.size());
+          for (int i = 0; i < 20; i++) {
+            assertEquals(String.format("key%02d", i), backwardKeys.get(i));
+          }
+          
+          return null;
+        });
+        
+    // Delete some keys to trigger merges and verify links are correctly maintained
+    for (int i = 0; i < 10; i++) {
+      btree.delete(String.format("key%02d", i));
+    }
+    
+    // Traverse again and verify 10 remaining keys
+    txManager.execute(
+        txContext -> {
+          Metadata metadata = new Metadata(txContext, btreeMetadataRef);
+          ItemReference currentRef = metadata.getRootNodeRef();
+          BTreeNode<String, byte[]> node = BTreeNode.load(txContext, currentRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          
+          // Traverse down to the first leaf node
+          while (node instanceof InternalNode<String, byte[]> internal) {
+            currentRef = internal.getChild(0);
+            node = BTreeNode.load(txContext, currentRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          }
+          
+          LeafNode<String, byte[]> firstLeaf = (LeafNode<String, byte[]>) node;
+          
+          // Traverse forward using getNext()
+          java.util.List<String> forwardKeys = new java.util.ArrayList<>();
+          LeafNode<String, byte[]> curr = firstLeaf;
+          ItemReference lastRef = null;
+          while (curr != null) {
+            forwardKeys.addAll(curr.keys);
+            lastRef = curr.getReference();
+            if (curr.getNext() != null) {
+              curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, curr.getNext(), StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+            } else {
+              curr = null;
+            }
+          }
+          
+          // Verify we saw remaining 10 keys in order
+          assertEquals(10, forwardKeys.size());
+          for (int i = 0; i < 10; i++) {
+            assertEquals(String.format("key%02d", i + 10), forwardKeys.get(i));
+          }
+          
+          // Traverse backward using getPrev()
+          java.util.List<String> backwardKeys = new java.util.ArrayList<>();
+          curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, lastRef, StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+          while (curr != null) {
+            for (int i = curr.getKeyCount() - 1; i >= 0; i--) {
+              backwardKeys.add(0, curr.getKey(i));
+            }
+            if (curr.getPrev() != null) {
+              curr = (LeafNode<String, byte[]>) BTreeNode.load(txContext, curr.getPrev(), StringSerializer.INSTANCE, ByteArraySerializer.INSTANCE);
+            } else {
+              curr = null;
+            }
+          }
+          
+          // Verify backward keys
+          assertEquals(10, backwardKeys.size());
+          for (int i = 0; i < 10; i++) {
+            assertEquals(String.format("key%02d", i + 10), backwardKeys.get(i));
+          }
+          
+          return null;
+        });
   }
 }
